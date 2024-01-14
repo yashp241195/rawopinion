@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /explore
+Disallow: /big5
+Disallow: /notification
+Disallow: /message/
+Disallow: /profile/
+Disallow: /account/
+
+Sitemap: https://www.rawopinion.in/sitemap.xml
