@@ -9,8 +9,8 @@ export default defineConfig({
       VitePWA({
         manifest: {
           
-          name: 'Workoso - Work App',
-          short_name: 'Workoso',
+          name: 'RawOpinion - Opinion App',
+          short_name: 'RawOpinion',
           id: '/',
           start_url: '.',
           display: 'standalone',
@@ -19,23 +19,23 @@ export default defineConfig({
           
           icons: [
             {
-              src: 'images/date.ico',
+              src: 'images/quote.png',
               sizes: 'any',
               type: 'image/x-icon',
             },
             {
-              src: 'images/date.png',
+              src: 'images/quote.png',
               sizes: '512x512',
               type: 'image/png',
             },
             {
-              src: 'images/date.png',
+              src: 'images/quote.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: "maskable"
             },
             {
-              src: 'images/date.png',
+              src: 'images/quote.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: "any maskable"

@@ -1,8 +1,8 @@
 
 const LOCAL_BACKEND = 'http://192.168.100.6:4000/graphql'
 const BACKEND =  'https://www.rawopinion.in/graphql'
-// export const APP_BACKEND =  BACKEND
-export const APP_BACKEND =  LOCAL_BACKEND
+export const APP_BACKEND =  BACKEND
+// export const APP_BACKEND =  LOCAL_BACKEND
 
 export const APP_ICON = '/images/quote.png'
 export const FRONT_IMAGE = '../images/front.jpg'
