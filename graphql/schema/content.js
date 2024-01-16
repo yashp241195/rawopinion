@@ -20,10 +20,12 @@ const ContentTypes = `
   }
 
   type PostType{
-    postId:String postedBy:String 
-    postTitle:String 
-    postContent:String postImage:String 
-    upvoteCount:Int downvoteCount:Int
+    postId:String 
+    postedBy:String postedByName:String
+    userImage:ImageType verifiedUser:Boolean
+    postTitle:String postContent:String postImage:ImageType 
+    upvoteCount:Int downvoteCount:Int ContextOutCount:Int
+    onBlockchain:Boolean blockchainId:String
   }
 
   type CommentType{
@@ -33,7 +35,7 @@ const ContentTypes = `
     blockchain:String
   }
 
-  type PostListType{ postId:String postTitle:String postImage:ImageType postedBy:String postStatus:String verifiedUser:Boolean }
+  type PostListType{ postId:String postTitle:String postImage:ImageType postedBy:String postStatus:String verifiedUser:Boolean onBlockchain:Boolean }
   type PersonListType{ public_username:String firstname:String lastname:String profilepic:ImageType }
   type PageListType{ pageId:String public_username:String pageTitle:String pageLogo:ImageType memberLevel:String }
   
@@ -95,74 +97,80 @@ const ContentResolver = {
               postList:[
                 {
                   "postId":"1",
-                  "postedBy":"u/kim1",
+                  "postedBy":"p/climatewatch",
                   "verifiedUser":true,
+                  "onBlockchain":true,
                   "postStatus":"Blockchain",
-                  "postTitle":"Effects of climate change worsening in every part of the US, report says - 1 hr ago",
+                  "postTitle":"Scientists Warn of Accelerating Ice Melt in Antarctica - 1 hr ago",
                   "activityStatement":"You have upvoted the comment 'The better option ..'.",
                   "postImage":{
                     "imgid":1,
-                    "icon_url":"https://engineering.unl.edu/images/staff/Kayla-Person.jpg"
+                    "icon_url":"https://eoimages.gsfc.nasa.gov/images/imagerecords/83000/83624/temperature_nca-1991-2012_lrg.jpg"
                   },
                 },
                 {
                   "postId":"2",
-                  "postedBy":"u/kim2",
+                  "postedBy":"p/greeninsights",
                   "verifiedUser":true,
+                  "onBlockchain":true,
                   "postStatus":"Blockchain",
-                  "postTitle":"Effects of climate change worsening in every part of the US, report says - 1 hr ago",
+                  "postTitle":"Global Leaders Commit to Ambitious Carbon Reduction Targets - 12 hr ago",
                   "activityStatement":"You have upvoted the comment 'The better option ..'.",
                   "postImage":{
                     "imgid":1,
-                    "icon_url":"https://engineering.unl.edu/images/staff/Kayla-Person.jpg"
+                    "icon_url":"https://omdayal.com/wp-content/uploads/2022/05/rce-2.jpg"
                   },
                 },
                 {
                   "postId":"3",
-                  "postedBy":"u/kim3",
+                  "postedBy":"u/peter22",
                   "verifiedUser":true,
+                  "onBlockchain":true,
                   "postStatus":"Blockchain",
-                  "postTitle":"Effects of climate change worsening in every part of the US, report says - 1 hr ago",
+                  "postTitle":"Locals Adopts Solar Power Initiative for Sustainable Living - 3 days ago",
                   "activityStatement":"You have upvoted the comment 'The better option ..'.",
                   "postImage":{
                     "imgid":1,
-                    "icon_url":"https://engineering.unl.edu/images/staff/Kayla-Person.jpg"
+                    "icon_url":"https://newsstation.media/wp-content/uploads/2023/11/F_gjgWxbcAAXBq6.jpeg"
                   },
                 },
                 {
                   "postId":"4",
-                  "postedBy":"u/kim4",
+                  "postedBy":"p/climateunited",
                   "verifiedUser":true,
+                  "onBlockchain":false,
                   "postStatus":"Blockchain",
-                  "postTitle":"Effects of climate change worsening in every part of the US, report says - 1 hr ago",
+                  "postTitle":"UN Climate Summit Highlights Urgency for Global Action - 2 months ago",
                   "activityStatement":"You have upvoted the comment 'The better option ..'.",
                   "postImage":{
                     "imgid":1,
-                    "icon_url":"https://engineering.unl.edu/images/staff/Kayla-Person.jpg"
+                    "icon_url":"https://cloudfront-us-east-2.images.arcpublishing.com/reuters/LXXNMZTAR5I3DMPOATNCVHP4XE.jpg"
                   },
                 },
                 {
                   "postId":"5",
-                  "postedBy":"u/kim6",
+                  "postedBy":"p/tech4climate",
                   "verifiedUser":true,
+                  "onBlockchain":false,
                   "postStatus":"Blockchain",
-                  "postTitle":"Effects of climate change worsening in every part of the US, report says - 1 hr ago",
+                  "postTitle":"Innovative Technologies Tackle Carbon Emissions in Urban Areas - 1 month ago",
                   "activityStatement":"You have upvoted the comment 'The better option ..'.",
                   "postImage":{
                     "imgid":1,
-                    "icon_url":"https://engineering.unl.edu/images/staff/Kayla-Person.jpg"
+                    "icon_url":"https://d3mvlb3hz2g78.cloudfront.net/wp-content/uploads/2021/11/thumb_720_450_dreamstime_xxl_62022495.jpg"
                   },
                 },
                 {
                   "postId":"6",
-                  "postedBy":"u/kim4",
+                  "postedBy":"p/naturedefenders",
                   "verifiedUser":true,
+                  "onBlockchain":true,
                   "postStatus":"Blockchain",
-                  "postTitle":"Effects of climate change worsening in every part of the US, report says - 1 hr ago",
+                  "postTitle":"Protecting Biodiversity Crucial in Climate Change Mitigation - 1 week ago",
                   "activityStatement":"You have upvoted the comment 'The better option ..'.",
                   "postImage":{
                     "imgid":1,
-                    "icon_url":"https://engineering.unl.edu/images/staff/Kayla-Person.jpg"
+                    "icon_url":"https://img.freepik.com/free-vector/hand-drawn-biodiversity-illustration_23-2149400543.jpg"
                   },
                 },
               ],
@@ -267,17 +275,32 @@ const ContentResolver = {
           const { _id } = auth.verifyToken("ACCESS_TOKEN", null, req)
           const {jobId} = args
 
-          const postDetails = [
-            {
-              "posttitle":"kim1",
-              "username":"kim1",
-              "firstname":"Kim1",
-              "lastname":"K",
-              "pic":"https://engineering.unl.edu/images/staff/Kayla-Person.jpg",
-              "lastseen":"last seen recently",
-              "communicationScore":4.3,
-            },
-          ]
+
+            const postDetails = {
+              "postId": "abc123",
+              "postedBy": "u/pater22",
+              "postedByName": "Peter Harris",
+              "userImage": {
+                "imgid":"1",
+                "icon_url": "https://images.unsplash.com/photo-1562788869-4ed32648eb72?q=80&w=1472&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+              },
+              "verifiedUser": true,
+              "postTitle": "Locals Adopts Solar Power Initiative for Sustainable Living",
+              "postContent": "Hello",
+              "postImage": {
+                "imgid":"1",
+                "url": "https://newsstation.media/wp-content/uploads/2023/11/F_gjgWxbcAAXBq6.jpeg",
+              },
+              "upvoteCount": 256,
+              "downvoteCount": 12,
+              "ContextOutCount": 1,
+              "onBlockchain": true,
+              "blockchainId": "xyz456"
+            }
+            
+
+            
+          
 
           return postDetails
           

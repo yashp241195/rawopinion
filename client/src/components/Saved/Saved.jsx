@@ -3,7 +3,7 @@ import useWindowSize from '../../hooks/useWindowSize'
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
 import Avatar from '@mui/material/Avatar';
-import { Button, Checkbox, TextField, InputAdornment, IconButton } from '@mui/material';
+import { Button, Checkbox, TextField, InputAdornment, IconButton, Typography } from '@mui/material';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
@@ -19,6 +19,11 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import CurrencyBitcoinIcon from '@mui/icons-material/CurrencyBitcoin';
+import Post from './../Post/Post'
+import Comments from '../Comments/Comments'
+import TablePagination from '@mui/material/TablePagination';
 
 
 
@@ -31,8 +36,7 @@ const Saved = () => {
     query GetSearchResults($searchInput:SearchInput){
       getSearchResults(searchInput:$searchInput){
         postList{
-          postId postTitle postedBy 
-          postStatus
+          postId postTitle postedBy verifiedUser onBlockchain
           postImage{
             imgid
             icon_url
@@ -51,47 +55,15 @@ const Saved = () => {
     }
   `
 
-  const GET_JOB_DETAILS_QUERY = gql`
-    query GetJobDetails($jobId:String){
-      getJobDetails(jobId:$jobId){
-        jobId jobtitle jobLocation jobMode
-        companyLogo companyName companyStatus
-        experience ctc
-      }
-    }
-  `
-
-  const SEND_JOB_REQUEST_QUERY = gql`
-    mutation SendJobRequest($requestInput:RequestInput){
-      sendJobRequest(requestInput:$requestInput)
-    }
-  `
-
   const { data, loading, error } = useQuery(GET_SEARCH_RESULT_QUERY, { fetchPolicy: "network-only" })
-
-  const [doGetJobDetails, { data: data2, loading: loading2, error: error2 }] = useLazyQuery(GET_JOB_DETAILS_QUERY, { fetchPolicy: "network-only" })
-
-  const [doSendJobRequest, { data: data3, loading: loading3, error: error3 }] = useMutation(SEND_JOB_REQUEST_QUERY, { fetchPolicy: "network-only" })
-
   const [searchResults, setSearchResults] = useState(null)
-  const [selectedJobDetail, setSelectedJobDetail] = useState(null)
+  const [fullScreenJobView, setFullScreenJobView] = useState(false)
 
   const [tabValue, setTabValue] = useState('2');
+  const [rowHeight, setRowHeight] = useState(90)
 
-
-  const [fullScreenJobView, setFullScreenJobView] = useState(false)
-  const [savedList, setSavedList] = useState([])
-
-  if (data2) {
-    if (!selectedJobDetail) {
-      if (data2.getJobDetails) {
-        setSelectedJobDetail(data2.getJobDetails)
-      }
-    }
-  }
 
   if (data) {
-    console.log("data", data)
     if (!searchResults) {
       if (data.getSearchResults) {
         setSearchResults(data.getSearchResults)
@@ -110,14 +82,13 @@ const Saved = () => {
     if (resultType === "POST") {
 
       const {
-        postId, postTitle, postedBy, postImage, postStatus
+        postId, postTitle, postedBy, postImage, postStatus, verifiedUser, onBlockchain
       } = searchResults.postList[index]
 
       content = <div>
         <div style={{ display: "flex", }} >
           <div style={{ width: "100%" }} >
             <Link
-              // onClick={() => { doGetJobDetails({ variables: { jobId: jobId } }) }}
               // to={"/Saved?jobId=" + jobId} 
               style={{ textDecoration: "none" }} >
               <div style={{ display: "flex", flexDirection: "column" }}>
@@ -131,26 +102,37 @@ const Saved = () => {
                         {postedBy}
                       </div>
                       <div style={{ paddingLeft: 5, paddingTop: 0 }}>
-                        {postStatus === "Verified" ? <CheckCircleIcon sx={{ fontSize: "0.7rem", color: "green" }} /> : <></>}
+                        {verifiedUser? <VerifiedUserIcon sx={{ fontSize: "0.8rem", color: "green" }} /> : <></>}
                       </div>
                     </div>
-                    <div style={{ fontSize: "0.9rem", paddingTop: 3, fontFamily: "sans-serif", color: "#000", }} >
-                      {postTitle}
+                    <div style={{ fontSize: "0.8rem", paddingTop: 3, fontFamily: "sans-serif", color: "#000", display:"flex", paddingLeft:2 }} >
+                      <div>
+                        {postTitle}
+                      </div>
+                      <div style={{display:"flex", flexDirection:"column", }}>
+                        <div style={{flexGrow:1}}></div>
+                      </div>
                     </div>
                   </div>
                 </div>
-
-
               </div>
             </Link>
           </div>
-
-          <div>
-            <Checkbox
-              sx={{ fontSize: 14 }}
-              icon={<BookmarkBorderIcon sx={{ color: "#595959" }} />}
-              checkedIcon={<BookmarkIcon sx={{ color: "#595959" }} />}
-            />
+          <div style={{ display:"flex", flexDirection:"column" }}>
+            <div>
+              <Checkbox
+                sx={{ fontSize: 14 }}
+                icon={<BookmarkBorderIcon sx={{ color: "#595959" }} />}
+                checkedIcon={<BookmarkIcon sx={{ color: "#595959" }} />}
+              />
+            </div>
+            <div>
+                {onBlockchain?
+                  <IconButton sx={{ fontSize: 12 }} >
+                    <CurrencyBitcoinIcon sx={{ color: "#595959" }} />
+                  </IconButton>
+                :<></>}
+            </div>
           </div>
 
         </div>
@@ -163,7 +145,7 @@ const Saved = () => {
     return <div
       key={key}
       style={{
-        ...style, width: "99%", height: 80,
+        ...style, width: "99%", height: 82,
         border: "1px solid #efefef",
         paddingTop: 2, borderRadius: 5,
         // background: bgStyle,
@@ -194,28 +176,27 @@ const Saved = () => {
     if (resultType === "POST") {
 
       const {
-        postId, postTitle, postedBy, postImage
+        postId, postTitle, postedBy, postImage, verifiedUser, onBlockchain
       } = searchResults.postList[index]
 
-      content = <div style={{display:"flex", width:"98%"}}>
+      content = <div style={{ display: "flex", width: "98%" }}>
         <div style={{ flexGrow: 1, }}>
           <Link
-            // onClick={() => { doGetJobDetails({ variables: { jobId: jobId } }) }}
             style={{ color: "#000", textDecoration: "none", }}
           //  to={"/Saved?jobId=" + jobId} 
           >
             <div style={{ display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", }}>
                 <div style={{ padding: 5 }}>
-                  <Avatar src={postImage.icon_url} variant="rounded" sx={{ width: 60, height: 60 }} ></Avatar>
+                  <Avatar src={postImage.icon_url} variant="rounded" sx={{ width: 70, height: 70 }} ></Avatar>
                 </div>
                 <div style={{ flexGrow: 1 }}>
                   <div style={{ display: "flex", paddingTop: 5, paddingLeft: 0 }}>
                     <div style={{ fontSize: "0.8rem", fontFamily: "sans-serif", color: "#070675", }} >
-                      {postedBy} 
+                      {postedBy}
                     </div>
                     <div style={{ paddingLeft: 5, paddingTop: 0 }}>
-                      {/* {companyStatus === "Verified" ? <CheckCircleIcon sx={{ fontSize: "0.7rem", color: "green" }} /> : <></>} */}
+                      {verifiedUser? <VerifiedUserIcon sx={{ fontSize: "0.8rem", color: "green" }} /> : <></>}
                     </div>
                   </div>
                   <div style={{ fontSize: "0.8rem", paddingTop: 3, fontFamily: "sans-serif", color: "#000", }} >
@@ -226,11 +207,21 @@ const Saved = () => {
             </div>
           </Link>
         </div>
-        <div style={{}}>
-          <Checkbox
-            icon={<BookmarkBorderIcon sx={{ color: "#595959" }} />}
-            checkedIcon={<BookmarkIcon sx={{ color: "#595959" }} />}
-          />
+        <div style={{display:"flex", flexDirection:"column"}}>
+          <div>
+            <Checkbox
+              icon={<BookmarkBorderIcon sx={{ color: "#595959" }} />}
+              checkedIcon={<BookmarkIcon sx={{ color: "#595959" }} />}
+            />
+          </div>
+          <div>
+            {onBlockchain?
+              <IconButton sx={{ fontSize: 12 }} >
+                <CurrencyBitcoinIcon sx={{ color: "#595959" }} />
+              </IconButton>
+            :<></>}
+          </div>
+          
         </div>
       </div>
 
@@ -239,7 +230,9 @@ const Saved = () => {
 
     return <div key={key} style={{ ...style, }}>
       <div style={{
-        display: "flex", border: "1px solid #efefef", height: 70,
+        display: "flex",
+        // background: bgStyle, 
+        border: "1px solid #efefef", height: 80,
         width: "97%", paddingTop: 2, paddingBottom: 2, borderRadius: 5
       }}
       >
@@ -253,21 +246,21 @@ const Saved = () => {
 
   const getDesktopView = () => {
     return <div>
-      <div style={{ display: "flex", justifyContent: "center", height: "78vh", paddingTop: 10 }}>
-
+      <div style={{ display: "flex", justifyContent: "center", height: "82vh", paddingTop: 10,  }}>
         <div style={{ width: 330, }}>
-          <div style={{ height: "62vh", border: "1px solid #efefef", borderRadius: 5, padding: 5 }}>
-            
+          <div style={{ height: "70vh", border: "1px solid #efefef", borderRadius: 5, padding: 5 }}>
+            <div style={{ fontSize:"1.35rem", padding:5,paddingBottom:10 }}>
+              Saved Posts
+            </div>
             {searchResults && searchResults.resultCount > 0 ?
               <AutoSizer>
                 {({ width, height }) => (
                   <List
                     width={width * 1}
-                    height={height * 0.86}
+                    height={height * 0.9}
                     rowCount={searchResults.resultCount}
-                    rowHeight={90}
+                    rowHeight={rowHeight}
                     rowRenderer={rowRenderer}
-                  // scrollToIndex={searchResults.findIndex(it => it.jobtitle === searchParams.get("jobId"))}
                   />
                 )}
               </AutoSizer>
@@ -278,20 +271,34 @@ const Saved = () => {
             }
           </div>
           {
-            searchResults && searchResults.resultPageCount > 0 ?
-              <div style={{ height: "8vh", paddingTop: 20, display: "flex", justifyContent: "center", width: "90%" }}>
-                <Pagination size="small" count={searchResults.resultPageCount} color="primary" />
-              </div>
-              :
-              <></>
+            searchResults && searchResults.resultPageCount > 1 ?
+            <div style={{ paddingTop: 10, paddingBottom:10, display: "flex", justifyContent: "center", width: "90%", }}>
+              <Pagination size="small" count={searchResults.resultPageCount} color="primary" />
+            </div>
+            :
+            <></>
           }
 
         </div>
 
-        <div style={{ border: "1px solid #fff", height: "63vh", }}>
+        <div style={{ border: "1px solid #fff", height: "71vh", }}>
           <div style={{ display: "flex", }} >
-            <div style={{ width: 480, height: "63vh", border: "1px solid #efefef", overflowY: "auto", borderRadius: 5 }} >
-             
+            <div style={{ width: 480, height: "71vh", border: "1px solid #efefef", overflowY: "auto", borderRadius: 5 }} >
+              <Box sx={{ width: '100%', typography: 'body1' }}>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                  <Tabs
+                    value={tabValue}
+                    onChange={(e, value) => { setTabValue(value) }}
+                    aria-label="wrapped label tabs example"
+                  >
+                    <Tab sx={{ textTransform: "none" }} label="View Content" value="2" />
+                    <Tab sx={{ textTransform: "none" }} label="Comments" value="3" />
+                  </Tabs>
+                </Box>
+                { tabValue == "2"?<Post />:<></> }
+                { tabValue == "3"?<Comments />:<></> }
+
+              </Box>
             </div>
           </div>
         </div>
@@ -304,63 +311,24 @@ const Saved = () => {
   const getMobileView = () => {
     return <div style={{ display: "flex", justifyContent: "center" }}>
       <div style={{ height: "80vh", display: "flex", flexDirection: "column", width: "90%", border: "1px solid #fff" }}>
-       
-
-        {
-          searchResults && searchResults.resultCount > 0 ?
-            <div style={{ height: (fullScreenJobView) ? "75vh" : "22vh", }} >
-
-              {
-                data ?
-                  <div style={{ fontFamily: "sans-serif", background: "#fff", border: "1px solid #efefef", overflowY: "auto", display: "flex", flexDirection: "column", borderRadius: 5, padding: 5, width: "94%" }} >
-                    <div style={{ height: "12vh" }}>
-
-                    </div>
-                    {
-                      fullScreenJobView ?
-                        <div style={{ flexGrow: 1 }}>
-                          <div style={{ height: 600 }} >
-
-                          </div>
-                        </div>
-                        :
-                        <></>
-                    }
-                    <div style={{ flexGrow: 1 }} ></div>
-                    <div style={{ display: "flex", }}>
-                      <div style={{ flexGrow: 1 }}></div>
-                      <div>
-                        <Button
-                          style={{ textTransform: "none", color: "#808080", }}
-                          size="small"
-                          onClick={() => { setFullScreenJobView(!fullScreenJobView) }}
-                          endIcon={
-                            (fullScreenJobView) ?
-                              <FullscreenExitIcon style={{ color: "#808080" }} />
-                              : <FullscreenIcon style={{ color: "#808080" }} />
-                          }
-                        >
-                          {fullScreenJobView ? "see less" : "see more "}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  :
-                  <div style={{ border: "1px solid #efefef", height: "97%", width: "97%", borderRadius: 5 }}>
-                    <div style={{ display: "flex", justifyContent: "center", height: "100%", flexDirection: "column" }}>
-                      <div style={{ display: "flex", justifyContent: "center" }}>
-                        {(loading2) ? <CircularProgress /> : <></>}
-                        {searchParams.get("jobId") ? <></> : <div> Please Select the Job </div>}
-                      </div>
-                    </div>
-                  </div>
-              }
+        <div style={{ display:"flex", border:"1px solid #fff" }}>
+          <div style={{ flexGrow:1,  display:"flex", flexDirection:"column", justifyContent:"center" }} >
+            <div style={{fontSize:"1.2rem", paddingLeft:2}}>
+              Saved Posts
             </div>
-            :
-            <></>
-        }
-
-        <div style={{ height: (fullScreenJobView) ? "0vh" : "54vh", marginTop: 2 }} >
+          </div>
+          <div>
+            <TablePagination
+              component="div"
+              count={100}
+              page={1}
+              rowsPerPage={10}
+              rowsPerPageOptions={-1}
+              onRowsPerPageChange={false}
+            />
+          </div>
+        </div>
+        <div style={{ height: (fullScreenJobView) ? "0vh" : "74vh", marginTop: 2 }} >
           {searchResults && searchResults.resultCount > 0 ?
             <AutoSizer>
               {({ width, height }) => (
@@ -368,7 +336,7 @@ const Saved = () => {
                   width={width * 1}
                   height={height}
                   rowCount={searchResults.resultCount}
-                  rowHeight={80}
+                  rowHeight={90}
                   rowRenderer={rowMobileRenderer}
                 />
               )}
@@ -378,23 +346,7 @@ const Saved = () => {
               No saved posts found
             </div>
           }
-
         </div>
-        {
-          searchResults && searchResults.resultPageCount > 0 && !fullScreenJobView ?
-            <div style={{ height: "5vh", marginTop: 5, paddingTop: 5, display: "flex", justifyContent: "center" }}>
-              <Pagination size="small" count={searchResults.resultPageCount} color="primary" />
-            </div>
-            :
-            <></>
-        }
-
-
-
-
-
-
-
       </div>
     </div>
   }

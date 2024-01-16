@@ -1,3 +1,3 @@
-# date-fe
+# opinion-fe
 
-frontend for dateze app in vite+react
+frontend for opinion app in vite+react

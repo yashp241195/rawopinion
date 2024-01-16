@@ -23,6 +23,7 @@ import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import CurrencyBitcoinIcon from '@mui/icons-material/CurrencyBitcoin';
 import Post from './../Post/Post'
 import Comments from '../Comments/Comments'
+import TablePagination from '@mui/material/TablePagination';
 
 
 
@@ -35,7 +36,7 @@ const Explore = () => {
     query GetSearchResults($searchInput:SearchInput){
       getSearchResults(searchInput:$searchInput){
         postList{
-          postId postTitle postedBy verifiedUser
+          postId postTitle postedBy verifiedUser onBlockchain
           postImage{
             imgid
             icon_url
@@ -81,7 +82,7 @@ const Explore = () => {
     if (resultType === "POST") {
 
       const {
-        postId, postTitle, postedBy, postImage, postStatus, verifiedUser
+        postId, postTitle, postedBy, postImage, postStatus, verifiedUser, onBlockchain
       } = searchResults.postList[index]
 
       content = <div>
@@ -110,18 +111,13 @@ const Explore = () => {
                       </div>
                       <div style={{display:"flex", flexDirection:"column", }}>
                         <div style={{flexGrow:1}}></div>
-
                       </div>
-
                     </div>
                   </div>
                 </div>
-                
-
               </div>
             </Link>
           </div>
-
           <div style={{ display:"flex", flexDirection:"column" }}>
             <div>
               <Checkbox
@@ -131,9 +127,11 @@ const Explore = () => {
               />
             </div>
             <div>
-              <IconButton sx={{ fontSize: 12 }} >
-                <CurrencyBitcoinIcon sx={{ color: "#595959" }} />
-              </IconButton>
+                {onBlockchain?
+                  <IconButton sx={{ fontSize: 12 }} >
+                    <CurrencyBitcoinIcon sx={{ color: "#595959" }} />
+                  </IconButton>
+                :<></>}
             </div>
           </div>
 
@@ -178,7 +176,7 @@ const Explore = () => {
     if (resultType === "POST") {
 
       const {
-        postId, postTitle, postedBy, postImage, verifiedUser
+        postId, postTitle, postedBy, postImage, verifiedUser, onBlockchain
       } = searchResults.postList[index]
 
       content = <div style={{ display: "flex", width: "98%" }}>
@@ -217,9 +215,11 @@ const Explore = () => {
             />
           </div>
           <div>
-          <IconButton sx={{ fontSize: 12 }} >
+            {onBlockchain?
+              <IconButton sx={{ fontSize: 12 }} >
                 <CurrencyBitcoinIcon sx={{ color: "#595959" }} />
               </IconButton>
+            :<></>}
           </div>
           
         </div>
@@ -246,10 +246,9 @@ const Explore = () => {
 
   const getDesktopView = () => {
     return <div>
-      <div style={{ display: "flex", justifyContent: "center", height: "78vh", paddingTop: 10 }}>
-
+      <div style={{ display: "flex", justifyContent: "center", height: "82vh", paddingTop: 10,  }}>
         <div style={{ width: 330, }}>
-          <div style={{ height: "62vh", border: "1px solid #efefef", borderRadius: 5, padding: 5 }}>
+          <div style={{ height: "70vh", border: "1px solid #efefef", borderRadius: 5, padding: 5 }}>
             <div style={{ height: "8vh", paddingTop: 2, display: "flex" }}>
               <div style={{}}>
                 <TextField
@@ -277,7 +276,7 @@ const Explore = () => {
                 {({ width, height }) => (
                   <List
                     width={width * 1}
-                    height={height * 0.86}
+                    height={height * 0.87}
                     rowCount={searchResults.resultCount}
                     rowHeight={rowHeight}
                     rowRenderer={rowRenderer}
@@ -292,7 +291,7 @@ const Explore = () => {
           </div>
           {
             searchResults && searchResults.resultPageCount > 1 ?
-            <div style={{ height: "8vh", paddingTop: 20, display: "flex", justifyContent: "center", width: "90%" }}>
+            <div style={{ paddingTop: 10, paddingBottom:10, display: "flex", justifyContent: "center", width: "90%", }}>
               <Pagination size="small" count={searchResults.resultPageCount} color="primary" />
             </div>
             :
@@ -301,9 +300,9 @@ const Explore = () => {
 
         </div>
 
-        <div style={{ border: "1px solid #fff", height: "63vh", }}>
+        <div style={{ border: "1px solid #fff", height: "71vh", }}>
           <div style={{ display: "flex", }} >
-            <div style={{ width: 480, height: "63vh", border: "1px solid #efefef", overflowY: "auto", borderRadius: 5 }} >
+            <div style={{ width: 480, height: "71vh", border: "1px solid #efefef", overflowY: "auto", borderRadius: 5 }} >
               <Box sx={{ width: '100%', typography: 'body1' }}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                   <Tabs
@@ -352,9 +351,23 @@ const Explore = () => {
             </div>
           </div>
         }
-
-       
-
+        <div style={{ display:"flex", border:"1px solid #fff" }}>
+          <div style={{ flexGrow:1,  display:"flex", flexDirection:"column", justifyContent:"center" }} >
+            <div style={{fontSize:"1.1rem", paddingLeft:2}}>
+              Results
+            </div>
+          </div>
+          <div>
+            <TablePagination
+              component="div"
+              count={100}
+              page={1}
+              rowsPerPage={10}
+              rowsPerPageOptions={-1}
+              onRowsPerPageChange={false}
+            />
+          </div>
+        </div>
         <div style={{ height: (fullScreenJobView) ? "0vh" : "74vh", marginTop: 2 }} >
           {searchResults && searchResults.resultCount > 0 ?
             <AutoSizer>
@@ -373,17 +386,7 @@ const Explore = () => {
               No saved posts found
             </div>
           }
-
         </div>
-        {
-          searchResults && searchResults.resultPageCount > 1 && !fullScreenJobView ?
-            <div style={{ height: "5vh", marginTop: 5, paddingTop: 5, display: "flex", justifyContent: "center" }}>
-              <Pagination size="small" count={searchResults.resultPageCount} color="primary" />
-            </div>
-            :
-            <></>
-        }
-
       </div>
     </div>
   }

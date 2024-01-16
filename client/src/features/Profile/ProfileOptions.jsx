@@ -104,7 +104,7 @@ const ProfileOptions = (props) => {
                     <div style={{ fontSize: 24, color:"#000", fontFamily:"serif",  paddingLeft:5,   }}>
                       {data1 && data1.getProfileView.firstname} 
                     </div>
-                    <div style={{  paddingLeft:5, color:"#595959", fontFamily:"sans-serif", fontWeight:"bold", color:"#0047AB"}}>
+                    <div style={{  paddingLeft:5, fontFamily:"sans-serif", fontWeight:"bold", color:"#0047AB"}}>
                       {data1 && data1.getProfileView.public_username}
                     </div>
                   </div>
