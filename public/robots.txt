@@ -1,6 +1,6 @@
 User-agent: *
-Disallow: /explore
-Disallow: /big5
+Disallow: /saved
+Disallow: /add
 Disallow: /notification
 Disallow: /message/
 Disallow: /profile/
