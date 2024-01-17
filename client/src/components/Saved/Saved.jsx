@@ -250,7 +250,7 @@ const Saved = () => {
         <div style={{ width: 330, }}>
           <div style={{ height: "70vh", border: "1px solid #efefef", borderRadius: 5, padding: 5 }}>
             <div style={{ fontSize:"1.35rem", padding:5,paddingBottom:10 }}>
-              Saved Posts
+              Saved
             </div>
             {searchResults && searchResults.resultCount > 0 ?
               <AutoSizer>

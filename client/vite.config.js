@@ -19,23 +19,23 @@ export default defineConfig({
           
           icons: [
             {
-              src: 'images/quote.png',
+              src: 'images/quote-3.ico',
               sizes: 'any',
               type: 'image/x-icon',
             },
             {
-              src: 'images/quote.png',
+              src: 'images/quote-2.png',
               sizes: '512x512',
               type: 'image/png',
             },
             {
-              src: 'images/quote.png',
+              src: 'images/quote-2.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: "maskable"
             },
             {
-              src: 'images/quote.png',
+              src: 'images/quote-2.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: "any maskable"
