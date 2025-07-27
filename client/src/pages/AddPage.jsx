@@ -7,7 +7,7 @@ const AddPage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-            <title>Add New rawopinion.in</title>
+            <title>Add New opinion.in</title>
           </Helmet>
   }
 

@@ -9,13 +9,13 @@ const Terms = () => {
 
     const termslist = [
       {
-        pt: "Eligibility: You must be at least 16 years old to use RawOpinion. By using the app, you represent and warrant that you meet this eligibility requirement."
+        pt: "Eligibility: You must be at least 16 years old to use Opinion. By using the app, you represent and warrant that you meet this eligibility requirement."
       },
       {
         pt: "Account Creation: You are responsible for maintaining the confidentiality of your account credentials. You agree to provide accurate and up-to-date information during the account creation process."
       },
       {
-        pt: "App Usage: RawOpinion is intended for personal use to facilitate open discussions. You agree not to use the app for any illegal or unauthorized purposes and are solely responsible for your interactions with other users."
+        pt: "App Usage: Opinion is intended for personal use to facilitate open discussions. You agree not to use the app for any illegal or unauthorized purposes and are solely responsible for your interactions with other users."
       },
       {
         pt: "Content Guidelines: You agree not to post or share any content that is unlawful, offensive, harmful, or violates the rights of others. We reserve the right to remove any content that breaches these guidelines or disrupts the platform’s integrity."

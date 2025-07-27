@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
 import useWindowSize from '../../hooks/useWindowSize'
-import { useGoogleLogin } from '@react-oauth/google';
 import { TextField, Button, IconButton, LinearProgress } from '@mui/material' 
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
@@ -27,16 +26,7 @@ const Signup = () => {
     }
   `;
 
-  const SIGNUP_GOOGLE_QUERY = gql`
-    mutation SignupWithGoogle($email:String, $sub:String){
-      signupWithGoogle(email:$email, sub:$sub)
-    }
-  `;
 
-  const saveToLocal = (key, value) => localStorage.setItem(key, JSON.stringify(value))
-  const getFromLocal = (key) => JSON.parse(localStorage.getItem(key))
-
-  const [doGoogleSignup, { loading: loading1, error: errorGoogleSignup, data: dataGoogleSignup }] = useMutation(SIGNUP_GOOGLE_QUERY);
   const [doSignup, { loading: loading2, error: errorSignup, data: dataSignup }] = useMutation(SIGNUP_QUERY);
 
   const [signupInfo, setSignUpInfo] = useState(null)
@@ -70,46 +60,6 @@ const Signup = () => {
 
   },[ signupInfo ])
 
-
-  if (dataGoogleSignup) { 
-    const newState = {
-      token:dataGoogleSignup.signupWithGoogle,
-      hasEssential:true,
-      isDeactivated:false,
-      isBanned:false,
-    }
-    saveToLocal("auth",newState)
-    authVar(newState)
-    navigate("/explore")
-  }
-
-
-  const onGoogleSignUp = useGoogleLogin({
-    onSuccess: async codeResponse => {
-      const accessToken = codeResponse.access_token
-      try {
-        const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json', 
-          },
-        });
-        const user = await response.json();
-        const { sub, email } = user
-
-        doGoogleSignup({
-          variables:{
-            email: email,
-            sub: sub
-          },
-          fetchPolicy: 'network-only',
-        })
-      } catch (error) {
-        console.error('User profile request failed:', error);
-      }
-    },
-    flow: 'implicit',
-  });
 
   const onSignUp = () => {
     const error = signupSchema.validate(signupInfo).error
@@ -190,21 +140,7 @@ const Signup = () => {
             </div>
   }
 
-  const wrapGoogleButtonView = ({text, size}) =>{
-    return <div style={{padding:5,}}>
-              <Button 
-                startIcon={<GoogleIcon />} 
-                onClick={() => {onGoogleSignUp()}}
-                size={size} variant="outlined"
-                style={{ 
-                  color:"#595959", textTransform:'none', 
-                  fontSize:14, border:"1px solid #D3D3D3"
-                }} 
-              >
-                {text}
-              </Button>
-            </div>
-  }
+  
 
   const getMobileView = () => {
     return <div style={{paddingLeft:20, height:"65vh"}}>
@@ -214,19 +150,7 @@ const Signup = () => {
       <div style={{ fontSize:14, padding:5, color:"#595959"}} >
         Already have an account? 
         <Link style={{textDecoration:"none", color:"#1976d2"}} to="/login"> Login</Link>
-      </div>
-      <div style={{width:200, padding:5, }}>
-        {wrapGoogleButtonView({text:'Signup with Google', size:"medium"})}
-      </div>
-      <div style={{ paddingLeft: 5, color: "red", fontSize: 14 }}>
-        {errorGoogleSignup && "Error : " + errorGoogleSignup.message}
-      </div>
-      <div style={{padding:5, width:220}}>
-        {loading1?<LinearProgress />:<></>}
-      </div>
-      <div style={{ fontSize:16,paddingBottom:10, padding:5,}}>
-        or
-      </div>
+      </div>      
       <div style={{width:250}}>
         {wrapTextView({ label:"Email" , value:"email", })}
       </div>
@@ -258,18 +182,6 @@ const Signup = () => {
       <div style={{ fontSize:16, padding:5, color:"#595959"}} >
         Already have an account? 
         <Link style={{textDecoration:"none", color:"#1976d2"}} to="/login"> Login</Link>
-      </div>
-      <div style={{width:200, padding:5, }}>
-        {wrapGoogleButtonView({text:'Signup with Google', size:"medium"})}
-      </div>
-      <div style={{ paddingLeft: 5, color: "red", fontSize: 14 }}>
-        {errorGoogleSignup && "Error : " + errorGoogleSignup.message}
-      </div>
-      <div style={{padding:5, width:220}}>
-        {loading1?<LinearProgress />:<></>}
-      </div>
-      <div style={{ fontSize:16,paddingBottom:10, padding:5,}}>
-        or
       </div>
       <div style={{width:240}}>
         {wrapTextView({ label:"Email" , value:"email", })}

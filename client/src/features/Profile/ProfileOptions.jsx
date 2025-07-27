@@ -30,7 +30,7 @@ const ProfileOptions = (props) => {
   const client = useApolloClient()
 
   const profileoptions = [
-    { name: "Connections", url: "/profile/connections", icon: <PeopleIcon sx={{ fontSize: 28 }} />, state: false },
+    { name: "Connections", url: "/profile/connections/following/1", icon: <PeopleIcon sx={{ fontSize: 28 }} />, state: false },
     { name: "Edit Profile", url: "/profile/user/edit/profile", icon: <ManageAccountsIcon sx={{ fontSize: 28 }} />, state: false },
     { name: "Settings", url: "/profile/settings", icon: <SettingsIcon sx={{ fontSize: 28 }} />, state: false },
   ]
@@ -97,13 +97,16 @@ const ProfileOptions = (props) => {
       <div style={{flexGrow: 1 }}></div>
       <div style={{ }}>
         <List dense={true}>
-        <Link style={{ textDecoration: "none", color: "#595959", fontFamily:"serif" }} to={"/profile/show"}>
+        <Link style={{ textDecoration: "none", color: "#595959", fontFamily:"serif" }} to={"/profile/show/overview"}>
           <ListItemButton>
             <ListItem sx={{}}>
               <ListItemIcon >
                 <Avatar
-                src={data1 && data1.getProfileView.profilePic.url}
-                sx={{ height: 60, width: 60 }}
+                  src={
+                    data1 && data1.getProfileView.profilePic && 
+                    data1.getProfileView.profilePic.icon_url
+                  }
+                  sx={{ height: 60, width: 60 }}
                 />
               </ListItemIcon>
               <ListItemText

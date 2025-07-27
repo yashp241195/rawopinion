@@ -8,7 +8,7 @@ const ProfileShowPage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-      <title>MyProfile rawopinion.in</title>
+      <title>MyProfile opinion.in</title>
     </Helmet>
   }
 
@@ -16,7 +16,7 @@ const ProfileShowPage = () => {
       <AuthLayoutFullScreen>
         {modifyHeader()}
           <Profile>
-            <ProfileView />
+            <ProfileView viewType={"show"} />
           </Profile>
       </AuthLayoutFullScreen> 
   )

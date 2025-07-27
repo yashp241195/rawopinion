@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import useWindowSize from '../../hooks/useWindowSize'
+import useWindowSize from '../../../hooks/useWindowSize'
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
 import Avatar from '@mui/material/Avatar';
@@ -22,39 +22,50 @@ import Tabs from '@mui/material/Tabs';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import CurrencyBitcoinIcon from '@mui/icons-material/CurrencyBitcoin';
 import CloseIcon from '@mui/icons-material/Close';
+import Vote from './Post/Vote';
+
 import RssFeedIcon from '@mui/icons-material/RssFeed';
 
 import TablePagination from '@mui/material/TablePagination';
 import { Modal, Menu, MenuItem, } from '@mui/material';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
-import { BsMessenger } from 'react-icons/bs'
 
 
 
-const Connections = () => {
+const Posts = () => {
 
   const [width,] = useWindowSize()
 
 
-  const { option, section, pageNo } = useParams();
+  const { option, section, pageNo, username } = useParams();
 
   const navigate = useNavigate()
   const location = useLocation()
 
   console.log("searchTerm 1",location.state)
 
-  const [followOption, setFollowOption] = useState(option)
-
 
   const GET_SEARCH_RESULT_QUERY = gql`
     query GetProfileResults($searchInput:SearchInput){
       getProfileResults(searchInput:$searchInput){
-          people{
-            firstname lastname 
+          posts{
+            _id
             publicUsername 
             profilePicIcon
-          }  
+            text
+            textAIAnalysis
+            image{
+              imgid url icon_url thumb_url 
+              identifiedAs isSafe
+            }
+            upvoteCount downvoteCount
+            commentsCount
+            readerPicIcon 
+            readerPublicUsername
+            readerUpvoted
+            timestamp
+          } 
           currentPage
           totalPages
           totalCount
@@ -75,7 +86,7 @@ const Connections = () => {
 
   useEffect(()=>{
     if(location && location.state && location.state.searchTerm){
-      setSearchFilter({...searchFilter, searchTerm:location.state.searchTerm})
+      setSearchFilter({...searchFilter,searchTerm:location.state.searchTerm})
     }
   },[location.state])
   
@@ -84,8 +95,9 @@ const Connections = () => {
     loadSearchResults({
       variables: {
         searchInput: {
-          type: searchFilter.searchType,
-          currentPage: searchFilter.currentPage
+          type: "posts",
+          currentPage: searchFilter.currentPage,
+          username:username,
         }
       },
       fetchPolicy: "network-only"
@@ -98,37 +110,6 @@ const Connections = () => {
     searchFilter.section,
     loadSearchResults
   ])
-
-
-  const wrapMenuItem = (item) => {
-    const { minWidth, label, value, menuItemList } = item
-    return <FormControl sx={{ m: 1, minWidth: minWidth, }} size="small">
-      <Select defaultValue={''}
-        onChange={(e) => {
-          setFollowOption(e.target.value)
-        }}
-        value={followOption}
-        MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
-        variant='standard'
-        size="small" 
-        >
-        {
-          menuItemList.map((it, i) => {
-            return <MenuItem 
-                key={i} value={it}
-                onClick={()=>{
-                  console.log("it",it)
-                  setSearchFilter({...searchFilter, searchType: it})
-                  navigate("/profile/connections/"+it+"/"+pageNo)
-                }}
-                >{it}</MenuItem>
-          })
-        }
-      </Select>
-    </FormControl>
-  }
-
-
 
 
   useEffect(() => {
@@ -146,14 +127,16 @@ const Connections = () => {
 
   }, [data,])
 
+  useEffect(() => {
+    if(username){
+      navigate(`/profile/view/${username}/posts/${searchFilter.currentPage}`,{ state: location.state });
+    }else{
+      navigate(`/profile/show/posts/${searchFilter.currentPage}`,{ state: location.state });
+    }
+  }, [searchFilter.currentPage, navigate]);
 
   if (error) { console.log("error", error) }
 
-  useEffect(() => {
-    navigate(`/profile/connections/${followOption}/${searchFilter.currentPage}`,{ state: location.state });
-  }, [ searchFilter.currentPage, followOption, navigate]);
-
-  
   const getDesktopView = () => {
     return <div>
       <div style={{ display: "flex", justifyContent: "center", height: "50vh", paddingTop: 0, width: "98%", border: "1px solid #fff" }}>
@@ -168,13 +151,7 @@ const Connections = () => {
                         fontSize: 18, color: "#595959"
                       }}
                       >
-                       {
-                          wrapMenuItem({
-                            value: 'followers',
-                            minWidth: 160, label: "followers",
-                            menuItemList: ["followers", "following","blocked"]
-                          })
-                        }
+                        My Posts
                       </div>
                       <div style={{ flexGrow: 1 }}></div>
                       <div>
@@ -201,53 +178,80 @@ const Connections = () => {
                 <div style={{ paddingLeft:0, display: "flex", justifyContent: "center", width: "100%", height: "45vh", border: "1px solid #fff", overflowY: "auto", borderRadius: 5 }} >
                   <div style={{ border: "1px solid #fff", width: "95%", paddingLeft: 5 }} >
 
-
                   {
-                    data && data.getProfileResults && data.getProfileResults.people
-                    && data.getProfileResults.people.map((person, i) => {
-                      return <div style={{ border: "1px solid #efefef", borderRadius: 5, height: 70, width: "90%", marginBottom: 5 }}>
+                    data && data.getProfileResults && data.getProfileResults.posts 
+                    && data.getProfileResults.posts.map((post, num) => {
+
+                      let ai_analysis = null
+
+                      if (post) { ai_analysis = JSON.parse(post.textAIAnalysis).content_analysis; }
+
+                      return <div style={{ border: "1px solid #efefef", borderRadius: 5, width: "90%", marginBottom: 10 }}>
                         <div>
+                          <Link 
+                          style={{ textDecoration:"none", color:"black" }} to={"/profile/view/" + post.publicUsername+"/overview"}>
                           <div style={{ display: "flex", padding: 10, border: "1px solid #fff" }}>
                             <div>
-                              <Avatar sx={{ height: 50, width: 50 }} src={person.profilePicIcon} />
+                              <Avatar sx={{ height: 40, width: 40 }} src={post.profilePicIcon} />
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", paddingLeft: 10, paddingRight: 10 }} >
-                              <div style={{ fontSize: "1rem", paddingTop: 5, }} >
-                                {person.firstname + " " + person.lastname}
+                              <div style={{ fontSize: "0.9rem", paddingTop: 10, fontFamily:"sans-serif" }} >
+                                  {post.publicUsername} 
                               </div>
                               <div style={{ fontSize: "0.8rem" }}>
-                                <Link
-                                style={{ textDecoration: "none", color: "blue" }} to={"/profile/view/" + person.publicUsername+"/overview"}>
-                                  @{person.publicUsername}
-                                </Link>
-                              </div>
-                              <div style={{ fontSize: "0.8rem" }}>
-                                {person.timestamp}
+                                {post.timestamp} 
                               </div>
                             </div>
                             <div style={{ flexGrow: 1 }}></div>
                             <div style={{ padding: 5 }}>
-                              <Button
-                                onClick={
-                                  () => {
-                                    navigate("/message/"+person.publicUsername)
-                                  }
-                                }
-                                size="small" variant="outlined"
-                                sx={{
-                                  textTransform: "none",
-                                  border: "1px solid #efefef"
-                                }}
-                                startIcon={<BsMessenger />}
-                              >
-                                Message
-                              </Button>
+                              {"onBlockchain" ? <CurrencyBitcoinIcon sx={{ fontSize: "1.6rem", color: "#595959" }} /> : <></>}
                             </div>
                           </div>
+                          </Link>
+                        </div>
+                        <div style={{ display: "flex", }}>
+                          {post.image ?
+                            <div style={{ paddingLeft: 12, paddingRight: 0, paddingTop: 10 }}>
+                              <Avatar sx={{ height: 150, width: 150 }} variant="rounded" src={post.image.thumb_url} />
+                            </div>
+                            : ""}
+
+                          <div style={{ whiteSpace: 'pre-line',  padding: 15, fontSize: 14, width: 300 }}>
+                            {post.text}
+                          </div>
+                        </div>
+                        <div style={{ fontSize: "0.95rem", padding: 10, }}>
+                          {
+                            ai_analysis && ai_analysis.map(
+                              (it, i) => <div key={i}>
+                                <div>
+                                  <Chip onClick={() => { setSelectedAIAnalysis(it.issue_type + "-" + num) }}
+                                    size="small" style={{ color: "#fff", border: "1px solid #fff", background: "#ff0000" }} label={it.issue_type} variant="outlined" />
+                                </div>
+                                <div style={{ fontSize: 12, paddingTop: 5, color: "red" }}>
+                                  {selectedAIAnalysis == it.issue_type + "-" + num ? it.description : ""}
+                                </div>
+                                <div style={{ fontSize: 12, paddingTop: 5, color: "blue" }}>
+                                </div>
+                              </div>
+                            )
+                          }
+                        </div>
+                        <div>
+                          <Vote
+                            upVoteCount={post.upvoteCount}
+                            downVoteCount={post.downvoteCount}
+                            commentsCount={post.commentsCount}
+                            readerUpvoted={post.readerUpvoted}
+                            hasReaderUpvoted={post.readerUpvoted == null ? false : true}
+                            postID={post._id}
+                          />
                         </div>
                       </div>
                     })
                   }
+
+                  
                       
                   {
                     loading?
@@ -311,4 +315,4 @@ const Connections = () => {
   )
 }
 
-export default Connections
+export default Posts

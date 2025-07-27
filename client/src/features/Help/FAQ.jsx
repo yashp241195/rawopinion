@@ -9,24 +9,24 @@ const FAQ = () => {
 
     const faqlist = [
       {
-        "question": "What is RawOpinion?",
-        "answer": "RawOpinion is a blockchain-based discussion forum that allows users to freely express their opinions. It offers an optional feature to publish posts and comments on the blockchain, ensuring secure and transparent conversations."
+        "question": "What is Opinion?",
+        "answer": "Opinion is a blockchain-based discussion forum that allows users to freely express their opinions. It offers an optional feature to publish posts and comments on the blockchain, ensuring secure and transparent conversations."
       },
       {
-        "question": "How does RawOpinion use blockchain?",
-        "answer": "RawOpinion allows users to optionally publish posts and comments on the blockchain. This feature ensures that content is secure and transparent, though it is not mandatory for all interactions on the platform."
+        "question": "How does Opinion use blockchain?",
+        "answer": "Opinion allows users to optionally publish posts and comments on the blockchain. This feature ensures that content is secure and transparent, though it is not mandatory for all interactions on the platform."
       },
       {
-        "question": "Is my data secure on RawOpinion?",
-        "answer": "Yes, RawOpinion uses industry-standard security measures to protect your data. If you choose to publish content on the blockchain, it will be secured and immutable. Posts and comments can be deleted from the app, but once published on the blockchain, they cannot be removed and will remain accessible from the blockchain node."
+        "question": "Is my data secure on Opinion?",
+        "answer": "Yes, Opinion uses industry-standard security measures to protect your data. If you choose to publish content on the blockchain, it will be secured and immutable. Posts and comments can be deleted from the app, but once published on the blockchain, they cannot be removed and will remain accessible from the blockchain node."
       },
       {
-        "question": "Can I delete my posts or comments on RawOpinion?",
+        "question": "Can I delete my posts or comments on Opinion?",
         "answer": "You can delete posts and comments from the app, but if they were published on the blockchain, they cannot be deleted from the blockchain. Once content is published on the blockchain, it becomes permanent and immutable, ensuring transparency and accountability."
       },
       {
-        "question": "Who can use RawOpinion?",
-        "answer": "Anyone over the age of 16 can use RawOpinion. The platform is designed to facilitate global conversations and provides options for users to manage their content according to their preferences."
+        "question": "Who can use Opinion?",
+        "answer": "Anyone over the age of 16 can use Opinion. The platform is designed to facilitate global conversations and provides options for users to manage their content according to their preferences."
       }
     ]
     

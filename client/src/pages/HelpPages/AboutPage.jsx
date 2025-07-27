@@ -7,7 +7,7 @@ const AboutPage = () => {
   
   const modifyHeader = () => {
     return <Helmet>
-            <title>About rawopinion.in</title>
+            <title>About opinion.in</title>
           </Helmet>
   }
   

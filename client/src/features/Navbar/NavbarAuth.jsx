@@ -116,7 +116,7 @@ const NavbarAuth = () => {
           <img src={imgurl} alt={text} height="33" />
         </div>
         <div style={{ paddingTop: 10, paddingLeft:10, fontSize: 26, fontFamily: "serif", }}>
-            RawOpinion
+            Opinion
         </div>
       </div>
     </Link>
@@ -126,7 +126,7 @@ const NavbarAuth = () => {
     return <nav>
       <div style={{ display: "flex", listStyle: "none", width: 900 }}>
         <div style={{ width: 200, paddingLeft: 10 }}>
-          {wrapHead(imgurl, '/login', 'RawOpinion')}
+          {wrapHead(imgurl, '/login', 'Opinion')}
         </div>
         <div style={{ flexGrow: 1, border: "1px solid #fff", display: "flex", flexDirection: "column" }}>
         </div>
@@ -134,11 +134,9 @@ const NavbarAuth = () => {
           {wrapNav('/add', '', <div style={{ paddingTop: 2, display: "flex" }}><AddIcon sx={{ fontSize: 32 }} /></div>)}
         </div>
         <div style={{ width: 50 }}>
-          {wrapNav('/explore', '', <div style={{ paddingTop: 2, display: "flex" }}><ExploreIcon sx={{ fontSize: 32 }} /></div>)}
+          {wrapNav('/explore/feeds/content/1', '', <div style={{ paddingTop: 2, display: "flex" }}><ExploreIcon sx={{ fontSize: 32 }} /></div>)}
         </div>
-        <div style={{ width: 50 }}>
-          {wrapNav('/saved', '', <div style={{ paddingTop: 2, display: "flex" }}><BookmarkIcon sx={{ fontSize: 32 }} /></div>)}
-        </div>
+        
         <div style={{ width: 40 }} >
           {wrapNav('/message/to', '', <div style={{ paddingTop: 4, display: "flex" }}><BsMessenger size={26} /></div>)}
         </div>
@@ -146,7 +144,7 @@ const NavbarAuth = () => {
           {wrapNotifyNav('/notification', '', <div style={{ paddingTop: 0, display: "flex" }}><NotificationsIcon sx={{ fontSize: 34 }} /></div>)}
         </div>
         <div style={{ width: 50 }}>
-          {wrapProfileNav('/profile/show', '', <div style={{ paddingTop: 1 }}><AccountCircleIcon sx={{ fontSize: 33 }} /></div>)}
+          {wrapProfileNav('/profile/show/overview', '', <div style={{ paddingTop: 1 }}><AccountCircleIcon sx={{ fontSize: 33 }} /></div>)}
         </div>
         <div style={{ width: 30 }} >
           <div style={{ paddingTop: 1, padding: 5, color: "#AEAEAE", cursor: "pointer" }}><LogoutIcon
@@ -162,12 +160,12 @@ const NavbarAuth = () => {
 
   const getMobileView = () => {
     return <Grid container style={{ display: "flex", listStyle: "none", }}>
-            <Grid xs={1} ></Grid>
+            <Grid item xs={1} ></Grid>
             <Grid style={{ display: "flex", justifyContent: "start", paddingTop: 10, border:"1px solid #fff"  }} item xs={9}>
               <div style={{ paddingLeft: 0, paddingTop: 0, display:"flex" }}>
                 <img src={imgurl} alt="t1" height="26" width="26" />
                 <div style={{padding:5, paddingTop:0, paddingLeft:10 ,fontSize:22}}>
-                  RawOpinion
+                  Opinion
                 </div>
               </div>
             </Grid>

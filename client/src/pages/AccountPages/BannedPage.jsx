@@ -7,7 +7,7 @@ const BannedPage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-            <title>Banned rawopinion.in</title>
+            <title>Banned opinion.in</title>
           </Helmet>
   }
 

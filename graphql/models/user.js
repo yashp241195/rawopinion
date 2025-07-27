@@ -58,7 +58,8 @@ UserSchema.pre('save', function (next) {
     if (this.isModified('email')) {
         const inputValue = this.email
         const hashedUsername = crypto.SHA256(inputValue).toString(crypto.enc.Hex);
-        this.username = hashedUsername; 
+        this.username = hashedUsername;
+        this.publicUsername = hashedUsername; 
     }
     next();
 });

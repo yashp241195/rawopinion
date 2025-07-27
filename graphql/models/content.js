@@ -1,55 +1,45 @@
 const mongoose = require( "mongoose");
 
 const ImageSchema = new mongoose.Schema({
-    imgid:Number, url:String, icon_url:String,
-    identifiedAs:String, filter:String, 
-    isProfileSafe:Boolean, isSafe:Boolean,
-    porn:Number, drawing:Number, sexy:Number, 
-    hentai:Number, neutral:Number,
+    imgid:Number, url:String, icon_url:String, thumb_url:String,
+    identifiedAs:String, isSafe:Boolean,
 })
 
 const ContentSchema = new mongoose.Schema({
-    text: String, image: ImageSchema
+    text: String, textAIAnalysis:String, image: ImageSchema
 })
 
 const PostSchema = new mongoose.Schema({
-    personUsername:String, 
-    title:String, 
-    content: ContentSchema,
-    upvoteCount:Number, downvoteCount:Number, 
-    timestamp: { type: Date, default: Date.now },
+    personUsername:String, content: ContentSchema,
+    upvoteCount:Number, downvoteCount:Number, commentsCount:Number,
+    status:String, timestamp: { type: Date, default: Date.now },
 })
 
 const CommentSchema = new mongoose.Schema({
     personUsername:String, 
     postId: String, 
     commentContent: ContentSchema,
-    upvoteCount:Number, downvoteCount:Number, 
-    contextOutCount:Number,
+    upvoteCount:Number, downvoteCount:Number, replyCount:Number, 
     parentCommentId: { type:String, default:null },
     timestamp: { type: Date, default: Date.now },
 })
 
 const VoteSchema = new mongoose.Schema({
     personUsername:String, 
-    type:String,
     postId: String, 
     commentId: String, 
-    upvote:Boolean,
-    contextOut:Boolean,
+    upvote: Boolean,
     timestamp: { type: Date, default: Date.now },
 })
 
 const FollowSchema = new mongoose.Schema({
-    sender:String, 
-    receiver:String, 
-    type:String,
+    sender:String, receiver:String, 
     timestamp: { type: Date, default: Date.now },
 })
 
+
 const BlockSchema = new mongoose.Schema({
-    sender:String, receiver:String,
-    report:String,
+    sender:String, receiver:String, report:String,
     timestamp: { type: Date, default: Date.now },
 })
 
@@ -82,6 +72,7 @@ const NotificationModel = mongoose.model('notification',NotificationSchema)
 
 
 module.exports = { 
-    VoteModel, PostModel, CommentModel, 
-    FollowModel, BlockModel, MessageModel, NotificationModel
+    VoteModel, PostModel, CommentModel,
+    FollowModel, BlockModel, MessageModel, 
+    NotificationModel
 }

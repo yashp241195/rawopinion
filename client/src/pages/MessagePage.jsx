@@ -7,7 +7,7 @@ import { Helmet } from 'react-helmet';
 const MessagePage = () => {
   const modifyHeader = () => {
     return <Helmet>
-            <title>Messages rawopinion.in</title>
+            <title>Messages opinion.in</title>
           </Helmet>
   }
   return (

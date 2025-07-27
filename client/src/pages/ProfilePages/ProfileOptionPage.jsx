@@ -7,7 +7,7 @@ const ProfileOptionPage = () => {
 
     const modifyHeader = () => {
         return <Helmet>
-                <title>Profile rawopinion.in</title>
+                <title>Profile opinion.in</title>
               </Helmet>
     }
     

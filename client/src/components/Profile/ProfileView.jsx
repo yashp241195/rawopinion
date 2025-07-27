@@ -1,20 +1,30 @@
 import React, { useState, useEffect } from 'react'
 import useWindowSize from '../../hooks/useWindowSize'
-import { IconButton, Chip, Button, CircularProgress, 
-  Pagination, Skeleton, Avatar, Tabs, Tab } from '@mui/material'
+import {
+  IconButton, Chip, 
+  Button, CircularProgress,
+  Pagination, Skeleton, 
+  Avatar, Tabs, Tab
+} from '@mui/material'
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import { useLazyQuery, useQuery, } from '@apollo/client'
+import { useLazyQuery, useQuery, useMutation } from '@apollo/client'
 import { gql, } from '@apollo/client';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { Link, useLocation, useNavigate } from "react-router-dom"
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom"
 import FilterView from './../../components/EditImage/FilterView'
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+
+import Box from '@mui/material/Box';
+import Posts from './ProfileView/Posts'
+import Followers from './ProfileView/Followers'
+import Comments from './ProfileView/Comments';
 
 import millify from "millify";
 
@@ -24,51 +34,63 @@ const ProfileView = (props) => {
 
   const [width] = useWindowSize()
 
-  const [tabValue, setTabValue] = useState(0)
   const [profileView, setProfileView] = useState(null)
 
-  const [ postList , setPostList ] = useState([
-    {name:"Hi1",},
-    {name:"Hi2",},
-    {name:"Hi3",},
-    {name:"Hi4",},
-    {name:"Hi1",},
-    {name:"Hi2",},
-    {name:"Hi3",},
-    {name:"Hi4",},
-    {name:"Hi1",},
-    {name:"Hi2",},
-    {name:"Hi3",},
-    {name:"Hi4",},
-  ])
+  const [followAction, setFollowAction] = useState(false)
+  const [blockAction, setBlockAction] = useState(false)
+  
+  const { username, option, pageNo } = useParams()
+  
+  const location = useLocation()
+  console.log("searchTerm 2",location.state)
 
-  const [ activityList , setActivityList ] = useState([
-    {name:"Hi21",},
-    {name:"Hi22",},
-    {name:"Hi23",},
-    {name:"Hi24",},
-    {name:"Hi21",},
-    {name:"Hi22",},
-    {name:"Hi23",},
-    {name:"Hi24",},
-    {name:"Hi21",},
-    {name:"Hi22",},
-    {name:"Hi23",},
-    {name:"Hi24",},
-  ])
 
+  const navigate = useNavigate()
+
+  const [value, setValue] = React.useState(option);
+  
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+    if(props.viewType == "view"){
+      navigate("/profile/view/"+username+"/"+newValue+"/1")
+    }
+    if(props.viewType == "show"){
+      navigate("/profile/show/"+newValue+"/1")
+    }
+  };
+
+  useEffect(()=>{
+    if(value == null){
+      
+      if(viewType=="view"){
+        setValue("overview")
+        navigate("/profile/view/"+username+"/overview/1")
+      }
+      if(viewType=="show"){
+        setValue("overview")
+        navigate("/profile/show/overview/1")
+      }
+    }
+  },[ value ])
 
   const locationPath = useLocation()
 
+  const SEND_REQUEST = gql`
+
+    mutation SendRequest($publicUsername:String,$type:String){
+      sendRequest(publicUsername:$publicUsername,type:$type)
+    }
+      
+  `
 
   const GET_PROFILE_VIEW = gql`
     query GetProfileView($username:String,$view:String){
       getProfileView(username:$username,view:$view){
         firstname lastname username
-        publicUsername
-        profileinfo{
-          bio
-        }
+        publicUsername 
+        location
+        bio
+        isMe isFollowByMe isBlockedByMe
         followersCount
         profilePic{
           imgid url icon_url 
@@ -81,195 +103,275 @@ const ProfileView = (props) => {
   `
 
 
-  // const GET_SEARCH_RESULTS = gql`
-  //   mutation GetSearchResults($searchInput:SearchInput){
-  //     getSearchResults(SearchInput:$searchInput){
-        
-  //     }
-  //   }
-
-  // `
+  const [ loadProfile, { data, loading, error }] = useLazyQuery(GET_PROFILE_VIEW, { variables: { username: null, view: "main" }, fetchPolicy: "network-only" })
+  
+  const [ sendRequest, { data:data1, loading:loading1, error:error1 }] = useMutation(SEND_REQUEST, { variables: { publicUsername:"",type:"" }, fetchPolicy: "network-only" })
 
 
-  const { data, loading, error } = useQuery(GET_PROFILE_VIEW, { variables:{username:null, view:"main"}, fetchPolicy: "network-only" })
+  useEffect(()=>{
 
-  // const [loadPosts,{ data:data1, loading:loading1, error:error1 }] = useLazyQuery(GET_PROFILE_VIEW, { fetchPolicy: "network-only" })
+      if(data && data.getProfileView){
 
+        let followType = "FOLLOW"
+
+        if(followAction){
+          followType = "FOLLOW"
+        }else{
+          followType = "UNFOLLOW"
+        }
+
+        sendRequest({
+          variables:{
+            publicUsername: username,
+            type: followType
+          },
+          fetchPolicy:"network-only"
+        })
+
+      }
+
+  },[ followAction ])
+
+
+  useEffect(()=>{
+
+      if(data && data.getProfileView){
+
+        let blockType = "BLOCK"
+
+        if(blockAction){
+          blockType = "BLOCK"
+        }else{
+          blockType = "UNBLOCK"
+        }
+
+        sendRequest({
+          variables:{
+            publicUsername: username,
+            type:blockType
+          },
+          fetchPolicy:"network-only"
+        })
+
+      }
+
+  },[ blockAction ])
+
+  
+
+  useEffect(()=>{
+    
+    loadProfile(
+      { 
+        variables: { 
+          username: username ? username:null, 
+          view: "main" 
+        }
+      }
+    )
+
+  },[loadProfile, username])
 
   if (data) {
-    console.log("data",data)
     if (!profileView) {
       setProfileView(data.getProfileView)
+      if(data.getProfileView.isFollowByMe == "YES"){
+        setFollowAction(true)
+      }
+      if(data.getProfileView.isBlockedByMe == "YES"){
+        setBlockAction(true)
+      }
     }
   }
 
   if (error) { console.log("error", error) }
-  if(loading){ console.log("loading",loading) }
+  if (loading) { console.log("loading", loading) }
 
-  
+
 
   const mainViewDesktop = () => {
+    
     if (profileView) {
 
       const {
         publicUsername, firstname, lastname,
-        profileinfo, followersCount, profilePic
+        followersCount, profilePic, isMe,
+        isFollowByMe, isBlockedByMe,
+        location, bio
       } = data.getProfileView
-      
-      const {bio} = profileinfo
 
-      
-      return <div style={{ width: 480, height:"65vh", overflowY:"hidden",  border: "1px solid #efefef", borderRadius:5}}>
+      return <div style={{ width: 520, height: "68vh", overflowY:"hidden", border: "1px solid #efefef", borderRadius: 5 }}>
+          <div style={{ width:520,  overflowX:"hidden" }}>
+            <Box sx={{ width: '100%' }}>
+              <Tabs
+                value={value}
+                onChange={handleChange}
+                textColor="secondary"
+                indicatorColor="secondary"
+                aria-label="secondary tabs example"
+              >
+                <Tab style={{textTransform:"none"}} value="overview" label="Overview" />
+                <Tab style={{textTransform:"none"}} value="posts" label="Posts" />
+                {
+                  props.viewType == "show"?
+                  <Tab style={{textTransform:"none"}} value="comments" label="Comments" />
+                  :<></>
+                }
+                {
+                  props.viewType == "view"?
+                  <Tab style={{textTransform:"none"}} value="followers" label="Followers" />
+                  :<></>
+                }
+
+              </Tabs>
+            </Box>
+            <div style={{border:"1px solid #fff", width:510, height:"60vh", borderRadius:5}}>
+              {
+                value == "overview"?
                 <div>
-                  
                   <div>
-                    <Tabs
-                      value={tabValue}
-                      onChange={(e, value) => { setTabValue(value) }}
-                      aria-label="wrapped label tabs example"
-                    >
-                      <Tab sx={{ textTransform: "none", }} label="Bio" value={0} />
-                      <Tab sx={{ textTransform: "none" }} label="Posts" value={1} />
-                      <Tab sx={{ textTransform: "none" }} label="Comments" value={2} />
-                    </Tabs>
-                  </div>
-                  {tabValue === 0?
-                  <div style={{ paddingTop:20, fontFamily:"sans-serif" ,fontSize:"1rem" ,padding:10 }}>
-                    <div style={{ display: "flex", width:450, paddingLeft:10, border:"1px solid #fff" }} >
-                      <div style={{ height:100, paddingTop:17,  }}>
-                            <div style={{display:"flex", width:80, justifyContent:"center",}}>
-                              <Avatar variant="round" sx={{ height: 60, width: 60 }} >
-                                  <FilterView
-                                    filter={profilePic.filter}
-                                    image={profilePic.url} />
-                              </Avatar>
-                            </div>
-                            <div style={{ paddingTop:10, paddingLeft:10, 
-                              display:"flex", justifyContent:"center",
-                              fontSize:14, fontFamily:"sans-serif", fontWeight:"bold", color:"#0047AB"}}>
-                                @{publicUsername}
-                            </div>
-                      </div>
-                      <div style={{ width: 480, paddingLeft: 0, paddingTop: 20, }}>
-                        <div style={{ display:"flex", fontSize: 18, paddingLeft: 5 }}>
-                          <div style={{ fontFamily:"sans-serif" }}>
-                            {firstname} {lastname} 
+                    <div style={{ paddingTop: 20, fontFamily: "sans-serif", fontSize: "1rem", padding: 10 }}>
+                      <div style={{ display: "flex", width: 450, paddingLeft: 10, border: "1px solid #fff" }} >
+                        <div style={{ height: 80, paddingTop: 25, paddingLeft:5 }}>
+                          <div style={{ display: "flex", width: 80, justifyContent: "center", }}>
+                            <Avatar variant="round" sx={{ height: 70, width: 70 }} >
+                              {
+                                profilePic?
+                                <FilterView
+                                filter={profilePic.filter}
+                                image={profilePic.url} 
+                                />
+                                :
+                                <AccountCircleIcon sx={{fontSize:82}} />
+                              }
+                            </Avatar>
                           </div>
                         </div>
-                        <div style={{ fontSize: 14, paddingLeft: 5, }}>
-                          <div style={{ paddingTop: 5, fontSize:14,  display:"flex" }}>
-                            <div style={{marginLeft:0}}>
+                        <div style={{ width: 480, paddingLeft: 0, paddingTop: 20, }}>
+                          <div style={{ display: "flex", fontSize: 18, paddingLeft: 5, paddingTop:15 }}>
+                            <div style={{ fontFamily: "sans-serif" }}>
+                              {firstname} {lastname}
                             </div>
+                            <div style={{ fontSize: 14, paddingLeft: 5, paddingTop: 2, color: "#000" }}>
+                              <Link style={{ textDecoration:"none", color:"#5D3FD3" }} to={"/profile/view/"+publicUsername+"/overview"}>
+                                @{publicUsername.substring(0,12)}
+                                {(publicUsername.length > 12)?"..":""}
+                              </Link>
+                            </div>
+                          </div>
+                          <div>
+                          </div>
+                          <div style={{ fontSize: 14, paddingLeft: 5, }}>
+                            <div style={{ paddingTop: 0, paddingLeft: 5, display: "flex", fontFamily: "sans-serif" }}>
+                            </div>
+                            {
+                              isMe == "NO" && username?
+                              <div style={{ display:"flex", fontSize: 12, paddingTop: 5, color: "#000" }}>
+                              <div>
+                                <Link to={"/message/"+publicUsername}>
+                                  <Button sx={{ textTransform:"none", color:"#595959", border:"1px solid #efefef" }} size="small" variant='outlined'>Message</Button>
+                                </Link>
+                              </div>
+                              <div style={{paddingLeft:5 }}>
+                                {
+                                  followAction?
+                                    <Button onClick={()=>{setFollowAction(false)}} sx={{ textTransform:"none", background:"#000"  }} size="small" variant='contained'>Following</Button>
+                                    :
+                                    <Button onClick={()=>{setFollowAction(true)}} sx={{ textTransform:"none", border:"1px solid #efefef" }} size="small" variant='outlined'>Follow</Button>
+                                }
+                              </div>
+                              <div style={{paddingLeft:5 }}>
+                                {
+                                  blockAction?
+                                    <Button onClick={()=>{setBlockAction(false)}} sx={{ textTransform:"none",  }} size="small" color="error"  variant='contained'>Blocked</Button>
+                                    :
+                                    <Button onClick={()=>{setBlockAction(true)}} sx={{ textTransform:"none", border:"1px solid #efefef" }} size="small" color="error" variant='outlined'>Block</Button>
+                                }                    
+                                </div>
+                              </div>
+                              :<></>
+                            }
+
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div 
+                        style={{
+                          paddingTop: 0, paddingLeft: 20,
+                          display: "flex", justifyContent: "left",
+                          fontSize: 14, fontFamily: "sans-serif", 
+                          color: "#000", border:"1px solid #fff"
+                        }}>
+                          <div style={{ width:120, fontWeight:"bold" }}>
+                            {location}
                           </div>
                           
-                          <div style={{ paddingTop: 0, paddingLeft:5, display:"flex", fontFamily:"sans-serif" }}>
-                            <div style={{ fontSize:16, paddingTop: 5, color:"#000"}}>
-                              {millify(followersCount)} followers
-                            </div>
+                      </div>
+                      <div 
+                        style={{
+                          paddingTop: 5, paddingLeft: 20,
+                          display: "flex", justifyContent: "left",
+                          fontSize: 14, fontFamily: "sans-serif", 
+                          color: "#000", border:"1px solid #fff"
+                        }}>
+                          <div style={{ width:80 }}>
+                              <b>{millify(3000)}</b> posts
                           </div>
-                        </div>
+                          <div style={{ width:100 }}>
+                            <b>{millify(10000000)}</b> followers
+                          </div>
+                          <div style={{ width:100 }}>
+                            <b>{millify(1000)}</b> following
+                          </div>
+                          
+                      </div>
+                      <div style={{ fontSize:14, paddingLeft: 20, paddingTop: 10 }}>
+                        {bio}
+                      </div>
+                      <div>
+                        
                       </div>
                     </div>
-                    <div>
-                    {bio}
-                    </div>
-            
-          </div>:<></>}
-          {
-            tabValue === 1?
-              <div style={{ display:"flex", justifyContent:"center", marginTop:5 }} >
-                <div style={{display:"flex", justifyContent:"center", width:"96%", flexDirection:"column"}} >
-                  <div style={{ width:"100%", height:"46vh", paddingTop:5, paddingBottom:5}} >
-                      {postList && postList.length > 0 ?
-                        <AutoSizer>
-                          {({ width, height }) => (
-                            <List
-                              width={width * 1}
-                              height={height}
-                              rowCount={postList.length}
-                              rowHeight={80}
-                              rowRenderer={
-                                ({
-                                  key,
-                                  index,
-                                  style,
-                                })=>{
-
-                                  const { name } = postList[index]
-
-                                  return <div key={key} style={{...style, border:"1px solid #efefef", padding:5, width:"90%", margin:5, height:62, borderRadius:5}}>
-                                    name {name}
-                                  </div>
-                                }
-                              }
-                            />
-                          )}
-                        </AutoSizer>
-                        :
-                        <div style={{ display: "flex", justifyContent: "center", color: "#595959", fontSize: 20 }}>
-                          You haven't posted anything yet.
-                        </div>
-                      }
                   </div>
-                  {postList && postList.length > 0 ?
-                    <div style={{height:"5vh", marginTop:5, paddingTop:5, display:"flex", justifyContent:"center" }}>
-                      <Pagination size="small" count={5} color="primary" />
-                    </div>
-                    :<></>
-                  }
                 </div>
-              </div>
-              :<></>
-          }
-          {
-            tabValue === 2?
-            <div style={{ display:"flex", justifyContent:"center", marginTop:5 }} >
-                <div style={{display:"flex", justifyContent:"center", width:"96%", flexDirection:"column"}} >
-                  <div style={{ width:"100%", height:"46vh", paddingTop:5, paddingBottom:5, border:"1px solid #fff"}} >
-                      {activityList && activityList.length > 0 ?
-                        <AutoSizer>
-                          {({ width, height }) => (
-                            <List
-                              width={width * 1}
-                              height={height}
-                              rowCount={activityList.length}
-                              rowHeight={80}
-                              rowRenderer={
-                                ({
-                                  key,
-                                  index,
-                                  style,
-                                })=>{
+                :""
+              }
 
-                                  const { name } = activityList[index]
-
-                                  return <div key={key} style={{...style, border:"1px solid #efefef", padding:5, width:"90%", margin:5, height:62, borderRadius:5}}>
-                                    name {name}
-                                  </div>
-                                }
-                              }
-                            />
-                          )}
-                        </AutoSizer>
-                        :
-                        <div style={{ display: "flex", justifyContent: "center", color: "#595959", fontSize: 20 }}>
-                          You haven't done any activity yet.
-                        </div>
-                      }
+              {
+                value == "posts" && data.getProfileView.isBlockedByMe == "NO"?
+                <div  style={{ width:"100%", border:"1px solid #fff" }}>
+                  <div style={{  width:"100%",  border:"1px solid #fff",}}>
+                    <Posts username={username} />
                   </div>
-                  {activityList && activityList.length > 0 ?
-                    <div style={{height:"5vh", marginTop:5, paddingTop:5, display:"flex", justifyContent:"center" }}>
-                      <Pagination size="small" count={5} color="primary" />
-                    </div>
-                    :<></>
-                  }
                 </div>
-              </div>
-              :<></>
-          }
+                :""
+              }
 
+              {
+                value == "comments"?
+                <div  style={{ width:"100%", border:"1px solid #fff" }}>
+                  <div style={{  width:"100%",  border:"1px solid #fff", }}>
+                    <Comments />
+                  </div>
                 </div>
-              </div>
+                :""
+              }  
+
+              {
+                value == "followers" && data.getProfileView.isBlockedByMe == "NO"?
+                <div  style={{ width:"100%",  border:"1px solid #fff" }}>
+                  <div style={{  border:"1px solid #fff",  }}>
+                    <Followers />
+                  </div>
+                </div>
+                :""
+              }
+
+
+            </div>
+          </div>
+      </div>
 
     }
 
@@ -277,173 +379,68 @@ const ProfileView = (props) => {
 
   }
 
-  
   const mainViewMobile = () => {
 
     if (profileView) {
 
       const {
-        publicUsername, firstname, lastname,
-        profileinfo, followersCount, profilePic
+        publicUsername, firstname, lastname, bio,
+        followersCount, profilePic, location
       } = data.getProfileView
-      
-      const {bio} = profileinfo
-      
-      return <div style={{ marginTop:10, display: "flex", flexDirection: "column", border: "1px solid #fff", height: "70vh", width: 280, borderRadius:5 }}>
-        
-        
+
+
+      return <div style={{ marginTop: 10, display: "flex", flexDirection: "column", border: "1px solid #fff", height: "70vh", width: 280, borderRadius: 5 }}>
         <div style={{}}>
-          
-          
-              
-            
-            <div >
-              <Tabs
-                value={tabValue}
-                onChange={(e, value) => { setTabValue(value) }}
-                aria-label="wrapped label tabs example"
-              >
-                <Tab sx={{ textTransform: "none", }} label="Bio" value={0} />
-                <Tab sx={{ textTransform: "none" }} label="Posts" value={1} />
-                <Tab sx={{ textTransform: "none" }} label="Comments" value={2} />
-              </Tabs>
-            </div>
-
-          {tabValue === 0?<div style={{ paddingTop:20, fontFamily:"sans-serif" ,fontSize:"1rem" ,padding:10 }}>
+          <div style={{ paddingTop: 20, fontFamily: "sans-serif", fontSize: "1rem", padding: 10 }}>
             <div>
-                <div style={{ display: "flex", width:280, }} >
-                  <div style={{ width: 100,  paddingTop:10, }}>
-                        <div style={{display:"flex", justifyContent:"center", }}>
-                          <Avatar variant="round" sx={{ height: 72, width: 72 }} >
-                              <FilterView
-                                filter={profilePic.filter}
-                                image={profilePic.url} />
-                          </Avatar>
-                        </div>
-                        <div style={{marginLeft:5, paddingTop:10, fontSize:14, fontFamily:"sans-serif", fontWeight:"bold", color:"#0047AB"}}>
-                          @{publicUsername}
-                        </div>
-                        <div style={{marginLeft:5, paddingTop:5, fontSize:14, fontFamily:"sans-serif", color:"#000"}}>
-                          {"Delhi"}
-                        </div>
+              <div style={{ display: "flex", width: 280, }} >
+                <div style={{ width: 100, paddingTop: 10, }}>
+                  <div style={{ display: "flex", justifyContent: "center", }}>
+                    <Avatar variant="round" sx={{ height: 72, width: 72 }} >
+                      {
+                        profilePic?
+                        <FilterView
+                        filter={profilePic.filter}
+                        image={profilePic.url} 
+                        />:
+                        <AccountCircleIcon sx={{fontSize:82}} />
+                      }
+                    </Avatar>
                   </div>
-                  <div style={{  paddingLeft: 0, paddingTop: 10, }}>
-                    <div style={{ display:"flex", fontSize: "1.2rem", paddingLeft: 5 }}>
-                      <div style={{ fontFamily:"sans-serif" }}>
-                        {firstname} {lastname} 
-                      </div>
+                  <div style={{ marginLeft: 5, paddingTop: 10, fontSize: 14, fontFamily: "sans-serif", fontWeight: "bold", color: "#0047AB" }}>
+                    @{publicUsername}
+                  </div>
+                  <div style={{ marginLeft: 5, paddingTop: 5, fontSize: 14, fontFamily: "sans-serif", color: "#000" }}>
+                    {location}
+                  </div>
+                </div>
+                <div style={{ paddingLeft: 0, paddingTop: 10, }}>
+                  <div style={{ display: "flex", fontSize: "1.2rem", paddingLeft: 5 }}>
+                    <div style={{ fontFamily: "sans-serif" }}>
+                      {firstname} {lastname}
                     </div>
-                    <div style={{ fontSize: 14, paddingLeft: 5, }}>
-                      
-                      <div style={{ paddingTop: 5, paddingLeft:5, display:"flex", fontFamily:"sans-serif" }}>
-                        <div style={{ fontSize:14, paddingTop: 2, color:"#000"}}>
-                          {millify(followersCount)} followers
-                        </div>
+                  </div>
+                  <div style={{ fontSize: 14, paddingLeft: 5, }}>
+                    <div style={{ paddingTop: 5, paddingLeft: 5, display: "flex", fontFamily: "sans-serif" }}>
+                      <div style={{ fontSize: 14, paddingTop: 2, color: "#000" }}>
+                        {followersCount ? millify(followersCount) : 0} followers
                       </div>
-                      
                     </div>
                   </div>
                 </div>
-                
+              </div>
+
             </div>
-            
-            {bio}
-          </div>:<></>}
-          {
-            tabValue === 1?
-              <div style={{ display:"flex", justifyContent:"center", marginTop:5 }} >
-                <div style={{display:"flex", justifyContent:"center", width:"96%", flexDirection:"column"}} >
-                  <div style={{ width:"100%", height:"60vh", paddingTop:10, paddingBottom:10}} >
-                      {postList && postList.length > 0 ?
-                        <AutoSizer>
-                          {({ width, height }) => (
-                            <List
-                              width={width * 1}
-                              height={height}
-                              rowCount={postList.length}
-                              rowHeight={80}
-                              rowRenderer={
-                                ({
-                                  key,
-                                  index,
-                                  style,
-                                })=>{
+            <div style={{ paddingLeft: 5, paddingTop: 5 }}>
+              {bio}
+            </div>
+          </div> 
+          
+          
 
-                                  const { name } = postList[index]
-
-                                  return <div key={key} style={{...style, border:"1px solid #efefef", padding:5, width:"90%", margin:5, height:62, borderRadius:5}}>
-                                    name {name}
-                                  </div>
-                                }
-                              }
-                            />
-                          )}
-                        </AutoSizer>
-                        :
-                        <div style={{ display: "flex", justifyContent: "center", color: "#595959", fontSize: 20 }}>
-                          You haven't posted anything yet.
-                        </div>
-                      }
-                  </div>
-                  {postList && postList.length > 0 ?
-                    <div style={{height:"5vh", marginTop:10, paddingTop:5, display:"flex", justifyContent:"center" }}>
-                      <Pagination size="small" count={5} color="primary" />
-                    </div>
-                    :<></>
-                  }
-                </div>
-              </div>
-              :<></>
-          }
-          {
-            tabValue === 2?
-            <div style={{ display:"flex", justifyContent:"center", marginTop:5 }} >
-                <div style={{display:"flex", justifyContent:"center", width:"96%", flexDirection:"column"}} >
-                  <div style={{ width:"100%", height:"60vh", paddingTop:10, paddingBottom:10}} >
-                      {activityList && activityList.length > 0 ?
-                        <AutoSizer>
-                          {({ width, height }) => (
-                            <List
-                              width={width * 1}
-                              height={height}
-                              rowCount={activityList.length}
-                              rowHeight={80}
-                              rowRenderer={
-                                ({
-                                  key,
-                                  index,
-                                  style,
-                                })=>{
-
-                                  const { name } = activityList[index]
-
-                                  return <div key={key} style={{...style, border:"1px solid #efefef", padding:5, width:"90%", margin:5, height:62, borderRadius:5}}>
-                                    name {name}
-                                  </div>
-                                }
-                              }
-                            />
-                          )}
-                        </AutoSizer>
-                        :
-                        <div style={{ display: "flex", justifyContent: "center", color: "#595959", fontSize: 20 }}>
-                          You haven't done any activity yet.
-                        </div>
-                      }
-                  </div>
-                  {activityList && activityList.length > 0 ?
-                    <div style={{height:"5vh", marginTop:10, paddingTop:5, display:"flex", justifyContent:"center" }}>
-                      <Pagination size="small" count={5} color="primary" />
-                    </div>
-                    :<></>
-                  }
-                </div>
-              </div>
-              :<></>
-          }
 
         </div>
-        
+
       </div>
     }
     else {
@@ -459,11 +456,11 @@ const ProfileView = (props) => {
       {
         locationPath && locationPath.pathname != "/explore" && props && props.username ?
           <div style={{ fontSize: 22, padding: 10, paddingBottom: 15, }}>
-            <Link to={"/profile/matches"}>
-              <Button sx={{ textTransform: "none", color: "#595959" }} startIcon={<ArrowBackIcon />} >
-                back
-              </Button>
-            </Link>
+            <Button 
+            onClick={()=>{ navigate(-1) }}
+            sx={{ textTransform: "none", color: "#595959" }} startIcon={<ArrowBackIcon />} >
+              back
+            </Button>
           </div>
           :
           <div style={{}}></div>
@@ -474,29 +471,70 @@ const ProfileView = (props) => {
     </div>
   }
 
-
   const getDesktopView = () => {
-    return <div style={{}}>
-      <div style={{ display: "flex", justifyContent: "center" }}>
+    return <div style={{ display: "flex", justifyContent: "left", border:"1px solid #fff", }}>
+      <div style={{ display: "flex", justifyContent: "left", border:"1px solid #fff", }}>
+        
         <div style={{}}>
           {
-            locationPath && locationPath.pathname != "/explore" && props && props.username ?
+            props && props.username ?
               <div style={{ height: 50, }}>
-                <Link to={"/profile/matches"}>
-                  <Button sx={{ textTransform: "none", color: "#595959" }} startIcon={<ArrowBackIcon />} >
+                  <Button 
+                    onClick={()=>{ 
+                      console.log("location.state",location.state)
+                      if(location && location.state && location.state.searchType){
+                        navigate(`/explore/${location.state.section}/${location.state.searchType}/1`, { state: location.state });
+                      }
+                      if(location && location.state == null){
+                        navigate(-1)
+                      }
+                    }}
+                    sx={{ textTransform: "none", color: "#595959" }} 
+                    startIcon={<ArrowBackIcon />} >
                     back
                   </Button>
-                </Link>
               </div>
               :
               <div style={{ display: "flex", fontSize: 22, padding: 10, paddingLeft: 5, paddingBottom: 15, }}>
-                {locationPath && locationPath.pathname != "/explore" ? "My Profile" : ""}
               </div>
           }
           <div>
-            {mainViewDesktop()}
+            { profileView ? 
+                mainViewDesktop()
+              : 
+              <div style={{
+                width:400, height:"40vh", 
+                border:"1px solid #fff",
+                display:"flex",flexDirection:"column",
+                justifyContent:"center"
+              }}>
+                <div style={{border:"1px solid #fff", display:"flex", justifyContent:"center"}}>
+                  <div style={{width:300}}>
+                    {
+                      error && error.message == "essentials not found"?
+                        <div>
+                          Please fill essential details <br/>
+                          Click 
+                          <span style={{paddingLeft:5,paddingRight:5}}>
+                          <Link style={{textDecoration:"underline",}} to="/profile/user/edit/profile">here</Link> 
+                          </span>
+                          to edit profile 
+                        </div>
+                        :
+                        ""
+                    }
+                    {
+                      error && error.message == "public profile not found"?
+                        "Public profile not found"
+                        :
+                        ""
+                    }
+                  </div>
+                </div>
+              </div> 
+            }
           </div>
-          
+
         </div>
       </div>
     </div>
@@ -507,7 +545,7 @@ const ProfileView = (props) => {
     <div style={{}}>
       {
         !loading ?
-          <div style={{ }}>
+          <div style={{}}>
             {(width > 600 ? getDesktopView() : <></>)}
             {(width < 600 ? getMobileView() : <></>)}
           </div>

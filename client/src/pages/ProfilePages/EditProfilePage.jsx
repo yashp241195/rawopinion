@@ -8,7 +8,7 @@ const EditProfilePage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-            <title>EditProfile rawopinion.in</title>
+            <title>EditProfile opinion.in</title>
           </Helmet>
   }
 

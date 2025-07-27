@@ -13,7 +13,7 @@ const About = () => {
                       About
                     </Typography>
                     <Typography variant="subtitle1" gutterBottom>
-                      Welcome to RawOpinion — our discussion forum enhances freedom of speech, global accessibility, and
+                      Welcome to Opinion — our discussion forum enhances freedom of speech, global accessibility, and
                       fosters open dialogue through seamless integration of blockchain technology. By leveraging blockchain, 
                       we ensure secure, uncensored conversations, promoting trust and transparency between users across 
                       diverse geographies. 
@@ -28,7 +28,7 @@ const About = () => {
                     About 
                   </div>
                   <p style={{ fontSize:14, paddingTop:5, fontFamily:"sans-serif", color:"#595959"  }}>
-                    Welcome to RawOpinion — our discussion forum enhances freedom of speech, global accessibility, and
+                    Welcome to Opinion — our discussion forum enhances freedom of speech, global accessibility, and
                     fosters open dialogue through seamless integration of blockchain technology. By leveraging blockchain, 
                     we ensure secure, uncensored conversations, promoting trust and transparency between users across 
                     diverse geographies. 

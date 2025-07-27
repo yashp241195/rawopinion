@@ -7,7 +7,7 @@ const PasswordForgotPage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-            <title>PasswordForgot rawopinion.in</title>
+            <title>PasswordForgot opinion.in</title>
           </Helmet>
   }
 

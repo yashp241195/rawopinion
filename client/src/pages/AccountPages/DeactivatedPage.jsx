@@ -7,7 +7,7 @@ const DeactivatedPage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-            <title>Deactivated rawopinion.in</title>
+            <title>Deactivated opinion.in</title>
           </Helmet>
   }
 

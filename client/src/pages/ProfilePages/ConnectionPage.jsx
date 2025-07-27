@@ -8,7 +8,7 @@ const ConnectionPage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-            <title>Connections rawopinion.in</title>
+            <title>Connections opinion.in</title>
           </Helmet>
   }
 

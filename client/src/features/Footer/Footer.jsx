@@ -32,7 +32,7 @@ const Footer = () => {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 5 }}>
         <div>
           <div style={{ paddingTop: 2, color: "#808080" }}>
-            <span style={{ fontSize: 16 }}>RawOpinion</span>
+            <span style={{ fontSize: 16 }}>Opinion</span>
             <span style={{ fontSize: 16 }}> © {new Date().getFullYear()} </span>
           </div>
         </div>
@@ -66,7 +66,7 @@ const Footer = () => {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 5 }}>
         <div>
           <div style={{ paddingTop: 2, color: "#808080" }}>
-            <span style={{ fontSize: 15 }}>RawOpinion</span>
+            <span style={{ fontSize: 15 }}>Opinion</span>
             <span style={{ fontSize: 15 }}> © {new Date().getFullYear()} </span>
           </div>
         </div>

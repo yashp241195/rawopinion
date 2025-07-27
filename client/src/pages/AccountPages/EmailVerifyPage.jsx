@@ -7,7 +7,7 @@ const EmailVerifyPage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-            <title>EmailVerify rawopinion.in</title>
+            <title>EmailVerify opinion.in</title>
           </Helmet>
   }
 

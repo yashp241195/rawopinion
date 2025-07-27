@@ -25,8 +25,8 @@ const Profile = (props) => {
   const location = useLocation()
 
   const profileoptions = [
-    { name: "Your Profile", url: "/profile/show", icon: <AccountCircleIcon />, state: false },
-    { name: "Connections", url: "/profile/connections", icon: <PeopleIcon />, state: false },
+    { name: "Your Profile", url: "/profile/show/overview", icon: <AccountCircleIcon />, state: false },
+    { name: "Connections", url: "/profile/connections/following/1", icon: <PeopleIcon />, state: false },
     { name: "Edit Profile", url: "/profile/user/edit/profile", icon: <ManageAccountsIcon />, state: false },
     { name: "Settings", url: "/profile/settings", icon: <SettingsIcon />, state: false },
   ]
@@ -38,6 +38,7 @@ const Profile = (props) => {
               <List dense={true}>
               { 
                 profileoptions.map((item, i)=>{
+
                   const { name, url, icon, state } = item
                   const color = (location.pathname === url) ? "#3B3B3B" : "#979797"
 
@@ -66,6 +67,9 @@ const Profile = (props) => {
   }
 
   const getMobileView = () => {
+
+    const heading = profileoptions.filter(item=>item.url === location.pathname)
+
     return <div style={{width:"100%",  padding:10, }}>
             <div style={{ display:"flex", paddingBottom:5  }}>
                 <div style={{padding:5}}>
@@ -76,7 +80,7 @@ const Profile = (props) => {
                 </Link>
                 </div>
                 <div style={{fontSize:22, padding:10, }}>
-                {profileoptions.filter(item=>item.url === location.pathname)[0].name}
+                {/* {heading && heading.name} */}
                 </div>
             </div>
             <div style={{ height:"85vh",  }}>

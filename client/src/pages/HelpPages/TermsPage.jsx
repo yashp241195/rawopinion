@@ -7,7 +7,7 @@ const TermsPage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-            <title>Terms rawopinion.in</title>
+            <title>Terms opinion.in</title>
           </Helmet>
   }
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import useWindowSize from '../../hooks/useWindowSize'
+import useWindowSize from '../../../hooks/useWindowSize'
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
 import Avatar from '@mui/material/Avatar';
@@ -22,34 +22,49 @@ import Tabs from '@mui/material/Tabs';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import CurrencyBitcoinIcon from '@mui/icons-material/CurrencyBitcoin';
 import CloseIcon from '@mui/icons-material/Close';
+import Vote from './Post/Vote';
+
 import RssFeedIcon from '@mui/icons-material/RssFeed';
 
 import TablePagination from '@mui/material/TablePagination';
 import { Modal, Menu, MenuItem, } from '@mui/material';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
-import { BsMessenger } from 'react-icons/bs'
 
 
 
-const Connections = () => {
+const Followers = () => {
 
   const [width,] = useWindowSize()
 
-
-  const { option, section, pageNo } = useParams();
+  const { option, section, pageNo, username } = useParams();
 
   const navigate = useNavigate()
   const location = useLocation()
 
   console.log("searchTerm 1",location.state)
 
-  const [followOption, setFollowOption] = useState(option)
-
 
   const GET_SEARCH_RESULT_QUERY = gql`
     query GetProfileResults($searchInput:SearchInput){
       getProfileResults(searchInput:$searchInput){
+          posts{
+            _id
+            publicUsername 
+            profilePicIcon
+            text
+            textAIAnalysis
+            image{
+              imgid url icon_url thumb_url 
+              identifiedAs isSafe
+            }
+            upvoteCount downvoteCount
+            commentsCount
+            readerPicIcon 
+            readerPublicUsername
+            readerUpvoted
+            timestamp
+          } 
           people{
             firstname lastname 
             publicUsername 
@@ -69,13 +84,13 @@ const Connections = () => {
 
   const [searchFilter, setSearchFilter] = useState({
     section: section, searchTerm: "", searchType: option,
-    currentPage: parseInt(pageNo), totalCount: 0
+    currentPage: 1, totalCount: 0
   })
 
 
   useEffect(()=>{
     if(location && location.state && location.state.searchTerm){
-      setSearchFilter({...searchFilter, searchTerm:location.state.searchTerm})
+      setSearchFilter({...searchFilter,searchTerm:location.state.searchTerm})
     }
   },[location.state])
   
@@ -84,7 +99,7 @@ const Connections = () => {
     loadSearchResults({
       variables: {
         searchInput: {
-          type: searchFilter.searchType,
+          type: "followers",
           currentPage: searchFilter.currentPage
         }
       },
@@ -100,60 +115,34 @@ const Connections = () => {
   ])
 
 
-  const wrapMenuItem = (item) => {
-    const { minWidth, label, value, menuItemList } = item
-    return <FormControl sx={{ m: 1, minWidth: minWidth, }} size="small">
-      <Select defaultValue={''}
-        onChange={(e) => {
-          setFollowOption(e.target.value)
-        }}
-        value={followOption}
-        MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
-        variant='standard'
-        size="small" 
-        >
-        {
-          menuItemList.map((it, i) => {
-            return <MenuItem 
-                key={i} value={it}
-                onClick={()=>{
-                  console.log("it",it)
-                  setSearchFilter({...searchFilter, searchType: it})
-                  navigate("/profile/connections/"+it+"/"+pageNo)
-                }}
-                >{it}</MenuItem>
-          })
-        }
-      </Select>
-    </FormControl>
-  }
-
-
-
-
   useEffect(() => {
 
     if (data && data.getProfileResults) {
 
       const totalCount = data.getProfileResults.totalCount || 1;
+      
       if (totalCount !== searchFilter.totalCount) {
         setSearchFilter((prev) => ({
           ...prev, totalCount,
         }));
       }
+      
 
     }
 
   }, [data,])
 
+  useEffect(() => {
+    if(username){
+      navigate(`/profile/view/${username}/followers/${searchFilter.currentPage}`,{ state: location.state });
+    }else{
+      navigate(`/profile/show/followers/${searchFilter.currentPage}`,{ state: location.state });
+    }
+  }, [searchFilter.currentPage, navigate]);
+  
 
   if (error) { console.log("error", error) }
 
-  useEffect(() => {
-    navigate(`/profile/connections/${followOption}/${searchFilter.currentPage}`,{ state: location.state });
-  }, [ searchFilter.currentPage, followOption, navigate]);
-
-  
   const getDesktopView = () => {
     return <div>
       <div style={{ display: "flex", justifyContent: "center", height: "50vh", paddingTop: 0, width: "98%", border: "1px solid #fff" }}>
@@ -168,13 +157,7 @@ const Connections = () => {
                         fontSize: 18, color: "#595959"
                       }}
                       >
-                       {
-                          wrapMenuItem({
-                            value: 'followers',
-                            minWidth: 160, label: "followers",
-                            menuItemList: ["followers", "following","blocked"]
-                          })
-                        }
+                        My Followers
                       </div>
                       <div style={{ flexGrow: 1 }}></div>
                       <div>
@@ -201,6 +184,7 @@ const Connections = () => {
                 <div style={{ paddingLeft:0, display: "flex", justifyContent: "center", width: "100%", height: "45vh", border: "1px solid #fff", overflowY: "auto", borderRadius: 5 }} >
                   <div style={{ border: "1px solid #fff", width: "95%", paddingLeft: 5 }} >
 
+                 
 
                   {
                     data && data.getProfileResults && data.getProfileResults.people
@@ -217,6 +201,7 @@ const Connections = () => {
                               </div>
                               <div style={{ fontSize: "0.8rem" }}>
                                 <Link
+                                state={searchFilter}
                                 style={{ textDecoration: "none", color: "blue" }} to={"/profile/view/" + person.publicUsername+"/overview"}>
                                   @{person.publicUsername}
                                 </Link>
@@ -230,7 +215,7 @@ const Connections = () => {
                               <Button
                                 onClick={
                                   () => {
-                                    navigate("/message/"+person.publicUsername)
+
                                   }
                                 }
                                 size="small" variant="outlined"
@@ -238,9 +223,8 @@ const Connections = () => {
                                   textTransform: "none",
                                   border: "1px solid #efefef"
                                 }}
-                                startIcon={<BsMessenger />}
                               >
-                                Message
+                                Follow
                               </Button>
                             </div>
                           </div>
@@ -311,4 +295,4 @@ const Connections = () => {
   )
 }
 
-export default Connections
+export default Followers

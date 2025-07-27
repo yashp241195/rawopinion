@@ -48,7 +48,7 @@ const Privacy = () => {
               </Typography>
               <div style={{height:"55vh", overflowY:"auto",padding:2, paddingRight:20 }}>
                 <Typography variant="subtitle2" gutterBottom>
-                At RawOpinion, we prioritize your privacy and are committed to protecting your personal information. By using our RawOpinion app, you consent to our data practices outlined below.
+                At Opinion, we prioritize your privacy and are committed to protecting your personal information. By using our Opinion app, you consent to our data practices outlined below.
                 </Typography>
                 {
                   privacypolicylist.map((item, i)=>{
@@ -56,7 +56,7 @@ const Privacy = () => {
                   })
                 }
                 <Typography variant="subtitle2" gutterBottom>
-                  By using our app, you agree to this Privacy Policy. Your privacy, security, and freedom of speech are our top priorities at RawOpinion.
+                  By using our app, you agree to this Privacy Policy. Your privacy, security, and freedom of speech are our top priorities at Opinion.
                 </Typography>
               </div>
             </div>
@@ -70,7 +70,7 @@ const Privacy = () => {
                 </div>
                 <div style={{height:"65vh", overflowY:"auto", paddingRight:10 }}>
                   <div style={{paddingTop:15,paddingBottom:15,  fontSize:14}}>
-                  At RawOpinion, we prioritize your privacy and are committed to protecting your personal information. By using our RawOpinion app, you consent to our data practices outlined below.
+                  At Opinion, we prioritize your privacy and are committed to protecting your personal information. By using our Opinion app, you consent to our data practices outlined below.
                   </div>
                   {
                     privacypolicylist.map((item, i)=>{
@@ -78,7 +78,7 @@ const Privacy = () => {
                     })
                   }
                   <div style={{ fontFamily:"sans-serif", fontSize:14, paddingBottom:15, color:"#595959" }}>
-                    By using our app, you agree to this Privacy Policy. Your privacy, security, and freedom of speech are our top priorities at RawOpinion.
+                    By using our app, you agree to this Privacy Policy. Your privacy, security, and freedom of speech are our top priorities at Opinion.
                   </div>
                 </div>
               </div>

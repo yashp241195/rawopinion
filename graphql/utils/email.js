@@ -2,12 +2,12 @@ require('dotenv').config();
 
 const getEmailBody = async (type, user) => {
     
-    const APP_NAME = "Rawopinion.in"
+    const APP_NAME = "Opinion.in"
     const { email, emailToken, forgetPassToken, deleteDate } = user
-    const APP_LINK = "https://rawopinion.csoc.in"
+    const APP_LINK = "https://opinion.csoc.in"
 
     const SENDER = {
-        name:"admin", email:"no-reply.rawopinion@csoc.in",
+        name:"admin", email:"no-reply.opinion@csoc.in",
         contact_email:"admin@csoc.in"
     }
     

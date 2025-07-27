@@ -7,7 +7,7 @@ const FAQPage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-            <title>FAQ rawopinion.in</title>
+            <title>FAQ opinion.in</title>
           </Helmet>
   }
 

@@ -6,7 +6,7 @@ import {Visibility, VisibilityOff } from '@mui/icons-material';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Joi from 'joi';
-import { useMutation, useApolloClient } from '@apollo/client';
+import { useMutation, useApolloClient, useLazyQuery } from '@apollo/client';
 import validationRules from '../../config/isValid';
 import {Link, useNavigate} from 'react-router-dom';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -33,11 +33,25 @@ const Settings = () => {
   const [changePasswordError, setChangePasswordError ] = useState(null)
   const [deactivateError, setDeactivateError ] = useState(null)
 
+  const [changeUsernameError, setChangeUsernameError ] = useState(null)
+
   const [openDeactivateModal, setOpenDeactivateModal] = React.useState(false);
 
   const CHANGE_PASSWORD_QUERY = gql`
     mutation ChangePasswordQuery($password:String, $newPassword:String) {
       changePassword(password:$password, newPassword:$newPassword)
+    }
+  `;
+
+  const CHANGE_USERNAME_QUERY = gql`
+    mutation ChangePublicUsername($newUsername:String) {
+      changePublicUsername(newUsername:$newUsername)
+    }
+  `;
+
+  const IS_USERNAME_QUERY = gql`
+    query IsPublicUsernameAvailable($publicUsername:String) {
+      isPublicUsernameAvailable(publicUsername:$publicUsername)
     }
   `;
 
@@ -47,9 +61,13 @@ const Settings = () => {
     }
   `;
 
+
   const [doChangePassword, {data:data1, loading:loading1, error:error1}] = useMutation(CHANGE_PASSWORD_QUERY,{fetchPolicy:"network-only"})
   const [doDeactivate,{data:data2, loading:loading2, error:error2}] = useMutation(DEACTIVATE_QUERY,{fetchPolicy:"network-only"})
-  
+  const [doChangeUsername, {data:data3, loading:loading3, error:error3}] = useMutation(CHANGE_USERNAME_QUERY,{fetchPolicy:"network-only"})
+  const [isUsernameAvailable, {data:data4, loading:loading4, error:error4}] = useLazyQuery(IS_USERNAME_QUERY,{fetchPolicy:"network-only"})
+
+
   if(data2){
     client.clearStore();
     localStorage.clear();
@@ -66,6 +84,32 @@ const Settings = () => {
     newpassword: validationRules.password,
   })
 
+  const isValidUsernameSchema = Joi.object({
+    username: validationRules.username,
+  })
+
+
+
+  useEffect(()=>{
+    if(data3){
+      console.log("data3",data3)
+      setChangeUsernameError(null)
+    }
+    if(error3){
+      setChangeUsernameError({ message:error3.message })
+    }
+    
+    if(data4){
+      setChangeUsernameError({ message:data4.isPublicUsernameAvailable })
+    }
+
+    if(error4){
+      setChangeUsernameError({ message:error4.message })
+    }
+
+  },[data3, error3, data4, error4, ])
+
+  
 
   useEffect(()=>{
 
@@ -132,9 +176,34 @@ const Settings = () => {
     }
   }
 
-  const onChangeUsername = () => {
-
+  const onSubmitUsername = () => {
+    doChangeUsername({
+      variables:{
+        newUsername:username
+      }
+    })
   }
+
+  
+
+  useEffect(()=>{
+
+    const errorValid5 = isValidUsernameSchema.validate({username}).error
+
+    if(!errorValid5){
+
+      isUsernameAvailable({
+        variables:{
+          publicUsername:username
+        }
+      })
+    
+    }
+    else{
+      setChangeUsernameError({message:"username must contain alteast 3 characters, a-z or 0-9"})
+    }
+
+  },[username])
 
   const wrapTextView = ({text, type, value, setValue, show, setShow}) =>{
     return <div style={{padding:5}}>
@@ -356,16 +425,31 @@ const Settings = () => {
             <div style={{ fontSize:22, paddingBottom:20, padding:5 }}>Settings</div>
             <div style={{fontSize:18, padding:5, paddingBottom:2}}>Change your username</div>
               <div>
-                {
-                  wrapTextView({ 
-                    text:'Check username', type:"username", 
-                    value:username, setValue:setPassword,
-                    show:true, 
-                  })
-                }
+                <div style={{padding:5}}>
+                  <TextField 
+                    name="username"
+                    autoComplete={"off"}
+                    size="small" 
+                    label={"username"} 
+                    value={username}
+                    type={"text"} 
+                    onChange={(e)=>{ 
+                      const val = e.target.value
+                      setUsername(val) 
+                    }}
+                    
+                    variant="outlined" 
+                  />
+                </div>
+              </div>
+              <div style={{paddingLeft:10, color:"green", width:250}}>
+                {data3 && data3.changePublicUsername}
+              </div>
+              <div style={{paddingLeft:10, width:250}}>
+                {changeUsernameError && changeUsernameError.message}
               </div>
               <div style={{paddingTop:5}}>
-                {wrapButtonView({text:'Change Username', size:"small", onClickfn:onChangeUsername})}
+                {wrapButtonView({text:'Change Username', size:"small", onClickfn:onSubmitUsername})}
               </div>
               <div style={{fontSize:18, padding:5, paddingTop:10, paddingBottom:2}}>Change your password</div>
               <div>
@@ -419,16 +503,32 @@ const Settings = () => {
             {mobileDeactivateModalView()}
             <div style={{fontSize:18, padding:5, paddingBottom:2}}>Change your username</div>
             <div>
-              {
-                wrapTextView({ 
-                  text:'Check username', type:"username", 
-                  value:username, setValue:setPassword,
-                  show:true, 
-                })
-              }
-            </div>
+                
+                <div style={{padding:5}}>
+                  <TextField 
+                    name="username"
+                    autoComplete={"off"}
+                    size="small" 
+                    label={"username"} 
+                    value={username}
+                    type={"text"} 
+                    onChange={(e)=>{ 
+                      const val = e.target.value
+                      setUsername(val) 
+                    }}
+                    
+                    variant="outlined" 
+                  />
+                </div>
+              </div>
+              <div style={{paddingLeft:10, color:"green", width:200}}>
+                {data3 && data3.changePublicUsername}
+              </div>
+              <div style={{paddingLeft:10, width:200}}>
+                {changeUsernameError && changeUsernameError.message}
+              </div>
             <div style={{paddingTop:5}}>
-              {wrapButtonView({text:'Change Username', size:"small", onClickfn:onChangeUsername})}
+              {wrapButtonView({text:'Change Username', size:"small", onClickfn:onSubmitUsername})}
             </div>
             <div style={{fontSize:18, padding:5, paddingTop:20, paddingBottom:10}}>Change your password</div>
             <div>

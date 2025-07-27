@@ -1,13 +1,15 @@
 import React from 'react';
 import AuthLayout from '../hoc/AuthLayout.jsx';
-import Explore from '../features/Explore/Explore.jsx'
+import Post from '../components/Post/Post.jsx'
+
+
 import { Helmet } from 'react-helmet';
 
-const SavedPage = () => {
+const PostPage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-            <title>Saved rawopinion.in</title>
+            <title>Post opinion.in</title>
           </Helmet>
   }
 
@@ -16,10 +18,10 @@ const SavedPage = () => {
     <div>
       <AuthLayout>
         {modifyHeader()}
-        <Explore />
+        <Post />
       </AuthLayout>
     </div>
   )
 }
 
-export default SavedPage
+export default PostPage

@@ -56,15 +56,13 @@ const NavbarBottomAuth = () => {
     <div style={{paddingBottom:5}}>
       <Grid container >
         <Grid item xs={3} style={{ display: "flex", justifyContent: "center", alignItems: "center",  }}>
-          {wrapNav('/explore', '', <div style={{ paddingTop: 2, display: "flex" }}><ExploreIcon sx={{ fontSize: 28 }} /></div>)}
+          {wrapNav('/explore/feeds/content/1', '', <div style={{ paddingTop: 2, display: "flex" }}><ExploreIcon sx={{ fontSize: 28 }} /></div>)}
         </Grid>
-        <Grid item xs={2} style={{ display: "flex", justifyContent: "start", alignItems: "start",  }}>
-          {wrapNav('/saved', '', <div style={{ paddingTop: 4, display: "flex" }}><BookmarkIcon sx={{ fontSize: 28 }} /></div>)}
-        </Grid>
-        <Grid item xs={2} style={{ display: "flex", justifyContent: "center", alignItems: "center",  }}>
+       
+        <Grid item xs={3} style={{ display: "flex", justifyContent: "center", alignItems: "center",  }}>
           {wrapNav('/add', '', <div style={{ paddingTop: 2, display: "flex" }}><AddIcon sx={{ fontSize: 28 }} /></div>)}
         </Grid>
-        <Grid item xs={2} style={{ display: "flex", justifyContent: "center", alignItems: "center",  }}>
+        <Grid item xs={3} style={{ display: "flex", justifyContent: "center", alignItems: "center",  }}>
           {wrapNav('/notification', '', <div style={{ paddingTop: 0, display: "flex" }}><NotificationsIcon sx={{ fontSize: 28 }} /></div>)}
         </Grid>
         <Grid item xs={3} style={{ display: "flex", justifyContent: "center", alignItems: "center", }}>

@@ -8,7 +8,7 @@ const SettingsPage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-            <title>Settings rawopinion.in</title>
+            <title>Settings opinion.in</title>
           </Helmet>
   }
   

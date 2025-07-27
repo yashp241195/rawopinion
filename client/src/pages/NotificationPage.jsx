@@ -7,7 +7,7 @@ import { Helmet } from 'react-helmet';
 const NotificationPage = () => {
   const modifyHeader = () => {
     return <Helmet>
-            <title>Notifications rawopinion.in</title>
+            <title>Notifications opinion.in</title>
           </Helmet>
   }
   return (

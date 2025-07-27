@@ -1,7 +1,7 @@
 import imageCompression from 'browser-image-compression';
 import { CLOUDINARY_IMAGE_UPLOAD_PRESET,CLOUDINARY_IMAGE_URL } from "../../config/config";
 
-const uploadImageCloudinary = async (inputImage, withIcon) => {
+const uploadImageCloudinary = async (inputImage, withIcon, withThumbnail) => {
 
     const blob = await fetch(inputImage).then(response => response.blob());
     const file = new File([blob], "filename", { type: blob.type });
@@ -21,13 +21,14 @@ const uploadImageCloudinary = async (inputImage, withIcon) => {
     }).then(response => response.json())
 
     let uploadedIcon = null
-    
+    let uploadThumbnail = null
+
     if(withIcon){
 
         const optionIcon = { maxSizeMB: 1, maxWidthOrHeight: 192, useWebWorker: true,}
-        const compressedFile = await imageCompression(file, optionIcon);
+        const compressedFileIcon = await imageCompression(file, optionIcon);
         
-        const fileIc = new File([compressedFile], "filename", { type: compressedFile.type });
+        const fileIc = new File([compressedFileIcon], "filename", { type: compressedFileIcon.type });
    
         const formData = new FormData()
         formData.append("file", fileIc)
@@ -40,10 +41,30 @@ const uploadImageCloudinary = async (inputImage, withIcon) => {
     
     }
 
+    if(withThumbnail){
+
+        const optionThumbnail = { maxSizeMB: 1, maxWidthOrHeight: 350, useWebWorker: true,}
+        const compressedFileThumbnail = await imageCompression(file, optionThumbnail);
+        
+        const fileThumb = new File([compressedFileThumbnail], "filename", { type: compressedFileThumbnail.type });
+   
+        const formData = new FormData()
+
+        formData.append("file", fileThumb)
+        formData.append("upload_preset", CLOUDINARY_IMAGE_UPLOAD_PRESET)
+    
+        uploadThumbnail = await fetch(CLOUDINARY_IMAGE_URL, {
+            method: 'POST',
+            body: formData,
+        }).then(response => response.json())
+    
+    }
+
     const UploadResponse = {
-        inputImage:inputImage,
-        url:uploadedImage.secure_url,
+        inputImage: inputImage,
+        url: uploadedImage.secure_url,
         icon_url: uploadedIcon && uploadedIcon.secure_url,
+        thumb_url: uploadThumbnail && uploadThumbnail.secure_url
     }
 
     return UploadResponse

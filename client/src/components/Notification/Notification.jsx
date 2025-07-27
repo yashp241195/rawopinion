@@ -172,7 +172,7 @@ const Notification = () => {
                                     <CircularProgress />
                             </div>
                             :
-                            <div style={{ display: "flex", paddingLeft: 5, fontSize: 16, color: "#595959" }}>
+                            <div style={{ display: "flex", paddingLeft: 10, fontSize: 16, color: "#595959" }}>
                                 {!notificationlist && "No Notification found"}
                             </div>
                     }

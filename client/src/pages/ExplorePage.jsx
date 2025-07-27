@@ -8,7 +8,7 @@ const ExplorePage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-            <title>Explore rawopinion.in</title>
+            <title>Explore opinion.in</title>
           </Helmet>
   }
 

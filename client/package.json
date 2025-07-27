@@ -53,6 +53,6 @@
   },
   "proxy": [
     "localhost:4000",
-    "rawopinion.in"
+    "opinion.in"
   ]
 }

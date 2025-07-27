@@ -9,7 +9,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import { useQuery, gql, useMutation, useLazyQuery } from '@apollo/client'
 import { CircularProgress, Chip } from '@mui/material';
-import { Link, useSearchParams, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate, useLocation, useParams } from 'react-router-dom'
 import Pagination from '@mui/material/Pagination';
 import SearchIcon from '@mui/icons-material/Search';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
@@ -21,447 +21,598 @@ import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import CurrencyBitcoinIcon from '@mui/icons-material/CurrencyBitcoin';
+import CloseIcon from '@mui/icons-material/Close';
 import Post from './../Post/Post'
 import Comments from '../Comments/Comments'
+import Vote from './Post/Vote';
+
+import RssFeedIcon from '@mui/icons-material/RssFeed';
+
 import TablePagination from '@mui/material/TablePagination';
+import { Modal, Menu, MenuItem, } from '@mui/material';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
 
 
 
 const Explore = () => {
 
   const [width,] = useWindowSize()
-  const [ searchParams ] = useSearchParams();
+
+
+  const { option, section, pageNo } = useParams();
 
   const navigate = useNavigate()
   const location = useLocation()
+
+  console.log("searchTerm 1",location.state)
+
 
   const GET_SEARCH_RESULT_QUERY = gql`
     query GetSearchResults($searchInput:SearchInput){
       getSearchResults(searchInput:$searchInput){
           posts{
-            personPublicUsername 
-            title
-            content{
-              text
+            _id
+            publicUsername 
+            profilePicIcon
+            text
+            textAIAnalysis
+            image{
+              imgid url icon_url thumb_url 
+              identifiedAs isSafe
             }
             upvoteCount downvoteCount
+            commentsCount
+            readerPicIcon 
+            readerPublicUsername
+            readerUpvoted
             timestamp
           } 
           people{
-            firstname
-            lastname 
-            username 
-            pic 
+            firstname lastname 
+            publicUsername 
+            profilePicIcon
           }  
           currentPage
           totalPages
-          resultCount
+          totalCount
+          type
       }
     }
   `
 
-  const { data, loading, error } = useQuery(GET_SEARCH_RESULT_QUERY, { fetchPolicy: "network-only" })
+  const [loadSearchResults, { data, loading, error }] = useLazyQuery(GET_SEARCH_RESULT_QUERY, { fetchPolicy: "network-only" })
 
-  const [searchResults, setSearchResults] = useState(null)
+  const [selectedAIAnalysis, setSelectedAIAnalysis] = useState("")
 
-  const [ searchFilter, setSearchFilter ] = useState(null)
-
-  const [ selecteFilterON, setSelectFilterON ] = useState(false)
-
-  const [fullScreenJobView, setFullScreenJobView] = useState(false)
-
-  const [tabValue, setTabValue] = useState('2');
-  const [rowHeight, setRowHeight] = useState(90)
-
-
-  // console.log("searchParams",searchParams)
-// navigate
-// console.log("navigate",navigate)
-// useLocation location
-console.log("searchFilter",searchFilter)
-
-useEffect(()=>{
-  
-  setSearchFilter({
-    ...searchFilter,
-    path: location.pathname
+  const [searchFilter, setSearchFilter] = useState({
+    section: section, searchTerm: "", searchType: option,
+    currentPage: parseInt(pageNo), totalCount: 0
   })
 
-},[setSearchFilter])
 
-  if (data) {
-    if (!searchResults) {
-      if (data.getSearchResults) {
-        setSearchResults(data.getSearchResults)
-      }
+  useEffect(()=>{
+    if(location && location.state && location.state.searchTerm){
+      setSearchFilter({...searchFilter,searchTerm:location.state.searchTerm})
     }
-  }
+  },[location.state])
+  
+  useEffect(() => {
+
+    loadSearchResults({
+      variables: {
+        searchInput: {
+          searchTerm: searchFilter.searchTerm,
+          type: searchFilter.searchType,
+          section: searchFilter.section,
+          currentPage: searchFilter.currentPage
+        }
+      },
+      fetchPolicy: "network-only"
+    })
+
+  }, [
+    searchFilter.searchTerm,
+    searchFilter.currentPage,
+    searchFilter.searchType,
+    searchFilter.section,
+    loadSearchResults
+  ])
+
+
+  useEffect(() => {
+
+    if (data && data.getSearchResults) {
+
+      const totalCount = data.getSearchResults.totalCount || 1;
+      if (totalCount !== searchFilter.totalCount) {
+        setSearchFilter((prev) => ({
+          ...prev, totalCount,
+        }));
+      }
+
+    }
+
+  }, [data,])
+
+  useEffect(() => {
+    navigate(`/explore/${searchFilter.section}/${searchFilter.searchType}/${searchFilter.currentPage}`,{ state: location.state });
+  }, [searchFilter.searchType, searchFilter.currentPage, navigate]);
+
+  useEffect(() => {
+    if (searchFilter.section == "feeds") {
+      navigate(`/explore/${searchFilter.section}/content/1`,{ state: location.state });
+    } else {
+      navigate(`/explore/${searchFilter.section}/${searchFilter.searchType}/${searchFilter.currentPage}`,{ state: location.state });
+    }
+  }, [searchFilter.section, navigate]);
+
+
 
   if (error) { console.log("error", error) }
 
-  const rowRenderer = ({ key, index, style }) => {
 
-    const { resultType } = searchResults
-
-    let content = ""
-
-    if (resultType === "POST") {
-
-      const {
-        postId, postTitle, postedBy, postImage, postStatus, verifiedUser, onBlockchain
-      } = searchResults.postList[index]
-
-      content = <div>
-        <div style={{ display: "flex", }} >
-          <div style={{ width: "100%" }} >
-            <Link
-              // to={"/explore?jobId=" + jobId} 
-              style={{ textDecoration: "none" }} >
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <div style={{ display: "flex", }}>
-                  <div style={{ padding: 5 }}>
-                    <Avatar src={postImage.icon_url} variant="rounded" sx={{ width: 70, height: 70 }} ></Avatar>
-                  </div>
-                  <div style={{ flexGrow: 1 }}>
-                    <div style={{ display: "flex", paddingTop: 5, paddingLeft: 0 }}>
-                      <div style={{ fontSize: "0.9rem", fontFamily: "sans-serif", color: "#070675", }} >
-                        {postedBy}
-                      </div>
-                      <div style={{ paddingLeft: 5, paddingTop: 0 }}>
-                        {verifiedUser? <VerifiedUserIcon sx={{ fontSize: "0.8rem", color: "green" }} /> : <></>}
-                      </div>
-                    </div>
-                    <div style={{ fontSize: "0.8rem", paddingTop: 3, fontFamily: "sans-serif", color: "#000", display:"flex", paddingLeft:2 }} >
-                      <div>
-                        {postTitle}
-                      </div>
-                      <div style={{display:"flex", flexDirection:"column", }}>
-                        <div style={{flexGrow:1}}></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </div>
-          <div style={{ display:"flex", flexDirection:"column" }}>
-            <div>
-              <Checkbox
-                sx={{ fontSize: 14 }}
-                icon={<BookmarkBorderIcon sx={{ color: "#595959" }} />}
-                checkedIcon={<BookmarkIcon sx={{ color: "#595959" }} />}
-              />
-            </div>
-            <div>
-                {onBlockchain?
-                  <IconButton sx={{ fontSize: 12 }} >
-                    <CurrencyBitcoinIcon sx={{ color: "#595959" }} />
-                  </IconButton>
-                :<></>}
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-    }
-
-    // const bgStyle = (searchParams.get("jobId") === jobId) ? "#fafafa" : "#fff"
-
-    return <div
-      key={key}
-      style={{
-        ...style, width: "99%", height: 82,
-        border: "1px solid #efefef",
-        paddingTop: 2, borderRadius: 5,
-        // background: bgStyle,
-      }}
-    >
-      {content}
-    </div>
-  };
-
-  const rowMobileRenderer = ({
-    key,
-    index,
-    style,
-  }) => {
-
-    // const {
-    //   jobtitle, jobId, jobLocation , jobMode,
-    //   experience, ctc,
-    //   companyLogo, companyName, companyStatus
-    // } = searchResults[index]
-
-    // const bgStyle = (searchParams.get("jobId") === jobId) ? "#f2f2f2" : "#fff"
-
-    const { resultType } = searchResults
-
-    let content = ""
-
-    if (resultType === "POST") {
-
-      const {
-        postId, postTitle, postedBy, postImage, verifiedUser, onBlockchain
-      } = searchResults.postList[index]
-
-      content = <div style={{ display: "flex", width: "98%" }}>
-        <div style={{ flexGrow: 1, }}>
-          <Link
-            style={{ color: "#000", textDecoration: "none", }}
-          //  to={"/Saved?jobId=" + jobId} 
-          >
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", }}>
-                <div style={{ padding: 5 }}>
-                  <Avatar src={postImage.icon_url} variant="rounded" sx={{ width: 70, height: 70 }} ></Avatar>
-                </div>
-                <div style={{ flexGrow: 1 }}>
-                  <div style={{ display: "flex", paddingTop: 5, paddingLeft: 0 }}>
-                    <div style={{ fontSize: "0.8rem", fontFamily: "sans-serif", color: "#070675", }} >
-                      {postedBy}
-                    </div>
-                    <div style={{ paddingLeft: 5, paddingTop: 0 }}>
-                      {verifiedUser? <VerifiedUserIcon sx={{ fontSize: "0.8rem", color: "green" }} /> : <></>}
-                    </div>
-                  </div>
-                  <div style={{ fontSize: "0.8rem", paddingTop: 3, fontFamily: "sans-serif", color: "#000", }} >
-                    {postTitle}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Link>
-        </div>
-        <div style={{display:"flex", flexDirection:"column"}}>
-          <div>
-            <Checkbox
-              icon={<BookmarkBorderIcon sx={{ color: "#595959" }} />}
-              checkedIcon={<BookmarkIcon sx={{ color: "#595959" }} />}
-            />
-          </div>
-          <div>
-            {onBlockchain?
-              <IconButton sx={{ fontSize: 12 }} >
-                <CurrencyBitcoinIcon sx={{ color: "#595959" }} />
-              </IconButton>
-            :<></>}
-          </div>
-          
-        </div>
-      </div>
-
-
-    }
-
-    return <div key={key} style={{ ...style, }}>
-      <div style={{
-        display: "flex",
-        // background: bgStyle, 
-        border: "1px solid #efefef", height: 80,
-        width: "97%", paddingTop: 2, paddingBottom: 2, borderRadius: 5
-      }}
+  const wrapMenuItem = (item) => {
+    const { minWidth, label, value, menuItemList } = item
+    return <FormControl sx={{ m: 1, minWidth: minWidth, }} size="small">
+      <Select defaultValue={''}
+        onChange={(e) => {
+          setSearchFilter({
+            ...searchFilter,
+            searchType: e.target.value,
+            currentPage: 1
+          })
+        }}
+        value={value}
+        MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
+        variant='standard'
+        size="small"
       >
-        {content}
-      </div>
-    </div>
-  };
+        {
+          menuItemList.map((it, i) => {
+            return <MenuItem
+              key={i} value={it}
+              onClick={() => {
+                navigate("/explore/search/" + it + "/1")
+              }}>
+              {it[0].toUpperCase() + it.slice(1).toLowerCase()}
+            </MenuItem>
+          })
+        }
+      </Select>
+    </FormControl>
+  }
 
 
   const getDesktopView = () => {
     return <div>
-      <div style={{ display: "flex", justifyContent: "center", height: "82vh", paddingTop: 10,  }}>
-        <div style={{ width: 330, }}>
-          <div style={{ height: "77vh", border: "1px solid #efefef", borderRadius: 5, padding: 5 }}>
-          
-            {searchFilter.path == "/saved"?"":
-            <div style={{ height: "8vh", paddingTop: 2, display: "flex" }}>
-              <div style={{}}>
-                <TextField
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <SearchIcon />
-                      </InputAdornment>
-                    ),
+      <div style={{ display: "flex", justifyContent: "center", height: "85vh", paddingTop: 0, width: "95%", border: "1px solid #fff" }}>
+        <div style={{ width: "90%", height: "80vh", border: "1px solid #fff", borderRadius: 5, padding: 5 }}>
+          <div style={{ width: "90%", border: "1px solid #fff", paddingLeft: 15 }}>
+            <Box sx={{ width: '50%', borderBottom: 1, borderColor: "#efefef" }}>
+              <Tabs
+                style={{ border: "1px solid #fff", height: 60, paddingBottom: 0, }}
+                value={searchFilter.section}
+                onChange={(ev, newV) => { setSearchFilter({ ...searchFilter, section: newV }) }}
+                textColor={"secondary"}
+                indicatorColor="secondary"
+                aria-label="secondary tabs example"
+              >
+                <Tab
+                  iconPosition="end"
+                  icon={<RssFeedIcon sx={{ fontSize: 18 }} />}
+                  style={{
+                    textTransform: "none", fontSize: 14,
                   }}
-                  name="n1"
-                  style={{ width: 270 }} id="outlined-basic-1"
-                  size="small" placeholder='Search ... ' variant="outlined"
+                  value="feeds" label="Feeds"
                 />
-              </div>
-              <div style={{ borderRadius: 5, paddingLeft:5 }}>
-                <IconButton 
-                onClick={()=>{ 
-                  setSelectFilterON(!selecteFilterON)
-                }}
-                style={{ border: "1px solid #efefef", background: "#fff" }} >
-                  <FilterListIcon />
-                </IconButton>
-              </div>
-            </div>
-            }
-            <div style={{ display:"flex", border:"1px solid #fff" }}>
-          <div style={{ flexGrow:1,  display:"flex", flexDirection:"column", justifyContent:"center" }} >
-            <div style={{fontSize:"1.1rem", paddingLeft:2}}>
-              {searchFilter.path == "/explore"?"Result":""}
-              {searchFilter.path == "/saved"?"Saved":""}
-            </div>
+                <Tab
+                  iconPosition="end"
+                  icon={<SearchIcon sx={{ fontSize: 18 }} />}
+                  style={{
+                    textTransform: "none", fontSize: 14,
+                  }}
+                  value="search" label="Search"
+                />
+              </Tabs>
+            </Box>
           </div>
-          <div>
-            <TablePagination
-              component="div"
-              onPageChange={()=>{}}
-              count={100}
-              page={1}
-              rowsPerPage={10}
-              rowsPerPageOptions={-1}
-              onRowsPerPageChange={false}
-            />
-          </div>
-        </div>
-        {
-          selecteFilterON?"Filter":
-            <div 
-              style={{ 
-                  border:"1px solid #fff", 
-                  height:searchFilter.path == "/saved"?"67vh":"58vh" 
+            {
+              searchFilter.section == "search" ?
+                <div>
+                  <div style={{ paddingTop: 10, }}>
+                    <div style={{ border: "1px solid #fff", display: "flex" }}>
+                      <div style={{ width: 125, paddingLeft: 20 }}>
+                        {
+                          wrapMenuItem({
+                            value: searchFilter.searchType,
+                            minWidth: 95,
+                            menuItemList: [
+                              "content", "people",
+                            ]
+                          })
+                        }
+                      </div>
+                      <div style={{ paddingTop: 8, }}>
+                        <div style={{ display: "flex" }}>
+                          <TextField
+                            autoFocus
+                            onChange={(e) => {
 
-                }}>
-          
-              {searchResults && searchResults.resultCount > 0 ?
-                <AutoSizer>
-                  {({ width, height }) => (
-                    <List
-                      width={width * 1}
-                      height={height * 0.97}
-                      rowCount={searchResults.resultCount}
-                      rowHeight={rowHeight}
-                      rowRenderer={rowRenderer}
-                    />
-                  )}
-                </AutoSizer>
-                :
-                <div style={{ color: "#595959", fontSize: 16 }}>
-                  No results found
+                              setSearchFilter({
+                                ...searchFilter,
+                                searchTerm: e.target.value
+                              })
+
+                            }}
+                            InputProps={{
+                              endAdornment: (
+                                <InputAdornment position="end">
+                                  <IconButton size="small">
+                                    {
+                                      searchFilter.searchTerm.length > 0 ?
+                                        <CloseIcon /> : <SearchIcon />
+                                    }
+                                  </IconButton>
+                                </InputAdornment>
+                              ),
+                            }}
+                            value={searchFilter.searchTerm}
+                            name="n1" style={{ width: 300 }} id="outlined-basic-1"
+                            size="small" placeholder='Search ... ' variant="standard"
+                          />
+
+                        </div>
+                      </div>
+                      <div>
+                        <div>
+                          <TablePagination
+                            component="div"
+                            onPageChange={(e, page) => {
+                              setSearchFilter({
+                                ...searchFilter,
+                                currentPage: page + 1
+                              })
+                            }}
+                            count={searchFilter.totalCount}
+                            page={searchFilter.currentPage - 1}
+                            rowsPerPage={2}
+                            rowsPerPageOptions={2}
+                            onRowsPerPageChange={false}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{  display: "flex", justifyContent: "center", width: "100%", height: "58vh", border: "1px solid #fff", overflowY: "auto", borderRadius: 5 }} >
+                      <div style={{ border: "1px solid #fff", width: "98%", paddingLeft: 30 }} >
+                        {
+                          data && data.getSearchResults && data.getSearchResults.people
+                          && data.getSearchResults.people.map((person, i) => {
+                            return <div style={{ border: "1px solid #efefef", borderRadius: 5, height: 80, width: "60%", marginBottom: 10 }}>
+                              <div>
+                                <div style={{ display: "flex", padding: 10, border: "1px solid #fff" }}>
+                                  <div>
+                                    <Avatar sx={{ height: 60, width: 60 }} src={person.profilePicIcon} />
+                                  </div>
+                                  <div style={{ display: "flex", flexDirection: "column", paddingLeft: 10, paddingRight: 10 }} >
+                                    <div style={{ fontSize: "1rem", paddingTop: 5, }} >
+                                      {person.firstname + " " + person.lastname}
+                                    </div>
+                                    <div style={{ fontSize: "0.8rem" }}>
+                                      <Link
+                                      state={searchFilter}
+                                      style={{ textDecoration: "none", color: "blue" }} to={"/profile/view/" + person.publicUsername+"/overview"}>
+                                        @{person.publicUsername}
+                                      </Link>
+                                    </div>
+                                    <div style={{ fontSize: "0.8rem" }}>
+                                      {person.timestamp}
+                                    </div>
+                                  </div>
+                                  <div style={{ flexGrow: 1 }}></div>
+                                  <div style={{ padding: 5 }}>
+                                    <Button
+                                      onClick={
+                                        () => {
+
+                                        }
+                                      }
+                                      size="small" variant="outlined"
+                                      sx={{
+                                        textTransform: "none",
+                                        border: "1px solid #efefef"
+                                      }}
+                                    >
+                                      Follow
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          })
+                        }
+
+                        {
+                          data && data.getSearchResults && data.getSearchResults.posts 
+                          && data.getSearchResults.posts.map((post, num) => {
+
+                            let ai_analysis = null
+
+                            if (post) { ai_analysis = JSON.parse(post.textAIAnalysis).content_analysis; }
+
+                            return <div style={{ border: "1px solid #efefef", borderRadius: 5, width: "60%", marginBottom: 10 }}>
+                              <div>
+                                <Link
+                                state={searchFilter}
+
+                                style={{ textDecoration:"none", color:"black" }} to={"/profile/view/" + post.publicUsername+"/overview"}>
+                                <div style={{ display: "flex", padding: 10, border: "1px solid #fff" }}>
+                                  <div>
+                                    <Avatar sx={{ height: 40, width: 40 }} src={post.profilePicIcon} />
+                                  </div>
+                                  <div style={{ display: "flex", flexDirection: "column", paddingLeft: 10, paddingRight: 10 }} >
+                                    <div style={{ fontSize: "0.9rem", paddingTop: 5, fontFamily:"sans-serif" }} >
+                                        {post.publicUsername} 
+                                    </div>
+                                    <div style={{ fontSize: "0.8rem" }}>
+                                      {post.timestamp} 
+                                    </div>
+                                  </div>
+
+                                  <div style={{ flexGrow: 1 }}></div>
+
+
+                                  <div style={{ padding: 5 }}>
+                                    {"onBlockchain" ? <CurrencyBitcoinIcon sx={{ fontSize: "1.6rem", color: "#595959" }} /> : <></>}
+                                  </div>
+                                </div>
+                                </Link>
+                              </div>
+                              <div style={{ display: "flex", }}>
+                                {post.image ?
+                                  <div style={{ paddingLeft: 12, paddingRight: 0, paddingTop: 10 }}>
+                                    <Avatar sx={{ height: 200, width: 200 }} variant="rounded" src={post.image.thumb_url} />
+                                  </div>
+                                  : ""}
+
+                                <div style={{ whiteSpace: 'pre-line', padding: 15, fontSize: 16, width: 300 }}>
+                                  {post.text}
+                                </div>
+                              </div>
+                              <div style={{ fontSize: "0.95rem", padding: 10, }}>
+                                {
+                                  ai_analysis && ai_analysis.map(
+                                    (it, i) => <div key={i}>
+                                      <div>
+                                        <Chip onClick={() => { setSelectedAIAnalysis(it.issue_type + "-" + num) }}
+                                          size="small" style={{ color: "#fff", border: "1px solid #fff", background: "#ff0000" }} label={it.issue_type} variant="outlined" />
+                                      </div>
+                                      <div style={{ fontSize: 12, paddingTop: 5, color: "red" }}>
+                                        {selectedAIAnalysis == it.issue_type + "-" + num ? it.description : ""}
+                                      </div>
+                                      <div style={{ fontSize: 12, paddingTop: 5, color: "blue" }}>
+                                      </div>
+                                    </div>
+                                  )
+                                }
+                              </div>
+                              <div>
+                                <Vote
+                                  searchFilter={searchFilter}
+                                  upVoteCount={post.upvoteCount}
+                                  downVoteCount={post.downvoteCount}
+                                  commentsCount={post.commentsCount}
+                                  readerUpvoted={post.readerUpvoted}
+                                  hasReaderUpvoted={post.readerUpvoted == null ? false : true}
+                                  postID={post._id}
+                                />
+                              </div>
+                            </div>
+                          })
+                        }
+                                    
+                        
+                        {
+                          loading?
+                            <div style={{width:400}}>
+                              {getLoadingView()}
+                            </div>
+                          :<></>
+                        }
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              }
-            </div>
-        }
+                :<></>
+            }
 
-          </div>
-        </div>
-        <div style={{ border: "1px solid #fff", height: "80vh", }}>
-          <div style={{ display: "flex", }} >
-            <div style={{ width: 480, height: "79vh", border: "1px solid #efefef", overflowY: "auto", borderRadius: 5 }} >
-              <Box sx={{ width: '100%', typography: 'body1' }}>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                  <Tabs
-                    value={tabValue}
-                    onChange={(e, value) => { setTabValue(value) }}
-                    aria-label="wrapped label tabs example"
-                  >
-                    <Tab sx={{ textTransform: "none" }} label="View Content" value="2" />
-                    <Tab sx={{ textTransform: "none" }} label="Comments" value="3" />
-                  </Tabs>
-                </Box>
-                { tabValue == "2"?<Post />:<></> }
-                { tabValue == "3"?<Comments />:<></> }
+            {
+              searchFilter.section == "feeds" ?
+                <div>
+                  <div style={{ paddingTop: 10, }}>
+                    <div style={{ border: "1px solid #fff", display: "flex" }}>
+                      <div style={{ display: "flex", width: 600, border: "1px solid #fff" }}>
+                        <div style={{
+                          padding: 5, paddingTop: 14, paddingLeft: 25,
+                          fontSize: 18, color: "#595959"
+                        }}
+                        >
+                          Content from people you follow
+                        </div>
+                        <div style={{ flexGrow: 1 }}></div>
+                        <div>
+                          <TablePagination
+                            component="div"
+                            onPageChange={(e, page) => {
+                              setSearchFilter({
+                                ...searchFilter,
+                                currentPage: page + 1
+                              })
+                            }}
+                            count={searchFilter.totalCount}
+                            page={searchFilter.currentPage - 1}
+                            rowsPerPage={2}
+                            rowsPerPageOptions={2}
+                            onRowsPerPageChange={false}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
 
-              </Box>
-            </div>
-          </div>
+                  <div style={{ paddingLeft:10, display: "flex", justifyContent: "center", width: "100%", height: "60vh", border: "1px solid #fff", overflowY: "auto", borderRadius: 5 }} >
+                    <div style={{ border: "1px solid #fff", width: "98%", paddingLeft: 15 }} >
+
+                    {
+                      data && data.getSearchResults && data.getSearchResults.posts 
+                      && data.getSearchResults.posts.map((post, num) => {
+
+                        let ai_analysis = null
+
+                        if (post) { ai_analysis = JSON.parse(post.textAIAnalysis).content_analysis; }
+
+                        return <div style={{ border: "1px solid #efefef", borderRadius: 5, width: "60%", marginBottom: 10 }}>
+                          <div>
+                            <Link 
+                            state={searchFilter}
+                            style={{ textDecoration:"none", color:"black" }} to={"/profile/view/" + post.publicUsername+"/overview"}>
+                            <div style={{ display: "flex", padding: 10, border: "1px solid #fff" }}>
+                              <div>
+                                <Avatar sx={{ height: 40, width: 40 }} src={post.profilePicIcon} />
+                              </div>
+                              <div style={{ display: "flex", flexDirection: "column", paddingLeft: 10, paddingRight: 10 }} >
+                                <div style={{ fontSize: "0.9rem", paddingTop: 5, fontFamily:"sans-serif" }} >
+                                    {post.publicUsername} 
+                                </div>
+                                <div style={{ fontSize: "0.8rem" }}>
+                                  {post.timestamp} 
+                                </div>
+                              </div>
+
+                              <div style={{ flexGrow: 1 }}></div>
+
+
+                              <div style={{ padding: 5 }}>
+                                {"onBlockchain" ? <CurrencyBitcoinIcon sx={{ fontSize: "1.6rem", color: "#595959" }} /> : <></>}
+                              </div>
+                            </div>
+                            </Link>
+                          </div>
+                          <div style={{ display: "flex", }}>
+                            {post.image ?
+                              <div style={{ paddingLeft: 12, paddingRight: 0, paddingTop: 10 }}>
+                                <Avatar sx={{ height: 200, width: 200 }} variant="rounded" src={post.image.thumb_url} />
+                              </div>
+                              : ""}
+
+                            <div style={{ whiteSpace: 'pre-line', padding: 15, fontSize: 16, width: 300 }}>
+                              {post.text}
+                            </div>
+                          </div>
+                          <div style={{ fontSize: "0.95rem", padding: 10, }}>
+                            {
+                              ai_analysis && ai_analysis.map(
+                                (it, i) => <div key={i}>
+                                  <div>
+                                    <Chip onClick={() => { setSelectedAIAnalysis(it.issue_type + "-" + num) }}
+                                      size="small" style={{ color: "#fff", border: "1px solid #fff", background: "#ff0000" }} label={it.issue_type} variant="outlined" />
+                                  </div>
+                                  <div style={{ fontSize: 12, paddingTop: 5, color: "red" }}>
+                                    {selectedAIAnalysis == it.issue_type + "-" + num ? it.description : ""}
+                                  </div>
+                                  <div style={{ fontSize: 12, paddingTop: 5, color: "blue" }}>
+                                  </div>
+                                </div>
+                              )
+                            }
+                          </div>
+                          <div>
+                            <Vote
+                              upVoteCount={post.upvoteCount}
+                              downVoteCount={post.downvoteCount}
+                              commentsCount={post.commentsCount}
+                              readerUpvoted={post.readerUpvoted}
+                              hasReaderUpvoted={post.readerUpvoted == null ? false : true}
+                              postID={post._id}
+                            />
+                          </div>
+                        </div>
+                      })
+                    }
+                        
+                    {
+                      loading?
+                        <div style={{width:400}}>
+                          {getLoadingView()}
+                        </div>
+                      :<></>
+                    }
+
+                    </div>
+                  </div>
+
+                  </div>
+                </div>
+                : <></>
+            }
+
+
+
+
+
         </div>
       </div>
     </div>
   }
 
 
-
   const getMobileView = () => {
     return <div style={{ display: "flex", justifyContent: "center" }}>
-      <div style={{ height: "80vh", display: "flex", flexDirection: "column", width: "90%", border: "1px solid #fff" }}>
+      <div style={{ height: "80vh", justifyContent: "center", display: "flex", flexDirection: "column", width: "90%", border: "1px solid #fff" }}>
+        <div style={{ display: "flex", justifyContent: "center", paddingTop: 0, paddingBottom: 0, border: "1px solid #fff" }}>
+          <div style={{ paddingLeft: 0, paddingRight: 5, width: "100%", display: "flex", flexDirection: "column" }}>
+            <div>
+              <div style={{ flexGrow: 1, padding: 5, }}>
+                {
+                  wrapMenuItem({
+                    value: searchFilter.searchType,
+                    minWidth: 90,
+                    menuItemList: [
+                      "people", "content",
+                    ]
+                  })
+                }
+              </div>
+            </div>
 
-      {searchFilter.path == "/saved"?"":
-          <div style={{ display: "flex", paddingTop: 5, paddingBottom: 5, border: "1px solid #fff" }}>
-            <div style={{ paddingLeft: 0, paddingRight: 5 }}>
-              <TextField
-                variant="outlined"
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                }}
-                style={{}} id="s1" size="small" placeholder="Search ..." />
-            </div>
-            <div style={{ borderRadius: 5 }}>
-              <IconButton style={{ border: "1px solid #efefef", background: "#fff" }} >
-                <FilterListIcon />
-              </IconButton>
-            </div>
-          </div>
-        }
-        <div style={{ display:"flex", border:"1px solid #fff" }}>
-          <div style={{ flexGrow:1,  display:"flex", flexDirection:"column", justifyContent:"center" }} >
-            <div style={{fontSize:"1.1rem", paddingLeft:2}}>
-  
-              {searchFilter.path == "/explore"?"Result":""}
-              {searchFilter.path == "/saved"?"Saved":""}
-
-            </div>
-          </div>
-          <div>
-            <TablePagination
-              component="div"
-              count={100}
-              page={1}
-              onPageChange={()=>{}}
-              rowsPerPage={10}
-              rowsPerPageOptions={-1}
-              onRowsPerPageChange={false}
-            />
           </div>
         </div>
-        <div style={{ height: (fullScreenJobView) ? "0vh" : "74vh", marginTop: 2 }} >
-          {searchResults && searchResults.resultCount > 0 ?
-            <AutoSizer>
-              {({ width, height }) => (
-                <List
-                  width={width * 1}
-                  height={height}
-                  rowCount={searchResults.resultCount}
-                  rowHeight={90}
-                  rowRenderer={rowMobileRenderer}
-                />
-              )}
-            </AutoSizer>
-            :
-            <div style={{ display: "flex", justifyContent: "center", color: "#595959", fontSize: 20 }}>
-              No saved posts found
-            </div>
-          }
+
+
+        <div style={{ height: "74vh", marginTop: 2 }} >
+
+
         </div>
+      </div>
+    </div>
+  }
+
+  const getLoadingView = () => {
+
+    return <div style={{ display: "flex", justifyContent: "center", height: 300, border: "1px solid #fff", flexDirection: "column" }}>
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <CircularProgress />
       </div>
     </div>
   }
 
   return (
     <div>
-      {
-        !loading ?
-          <div>
-            {(width > 800 ? getDesktopView() : <></>)}
-            {(width < 800 ? getMobileView() : <></>)} 
-          </div>
-          :
-          <div style={{ display: "flex", justifyContent: "center", height: "100%", flexDirection: "column" }}>
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <CircularProgress />
-            </div>
-          </div>
-      }
+      {(width > 800 ? getDesktopView() : <></>)}
+      {(width < 800 ? getMobileView() : <></>)}
     </div>
   )
 }

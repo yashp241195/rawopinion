@@ -9,8 +9,8 @@ export default defineConfig({
       VitePWA({
         manifest: {
           
-          name: 'RawOpinion - Opinion App',
-          short_name: 'RawOpinion',
+          name: 'Opinion - Opinion App',
+          short_name: 'Opinion',
           id: '/',
           start_url: '.',
           display: 'standalone',

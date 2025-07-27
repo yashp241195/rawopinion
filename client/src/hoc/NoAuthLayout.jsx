@@ -76,7 +76,7 @@ const NoAuthLayout = (props) => {
       {
         auth && auth.token?
           <div>
-            <Navigate to="/explore" />
+            <Navigate to="/explore/feeds/content/1" />
           </div>
           :
           <div>

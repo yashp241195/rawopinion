@@ -8,12 +8,13 @@ const PrivacyPage = lazy(() => import('./pages/HelpPages/PrivacyPage'));
 const FAQPage = lazy(() => import('./pages/HelpPages/FAQPage'));
 const TermsPage = lazy(() => import('./pages/HelpPages/TermsPage'));
 
-const SavedPage = lazy(() => import('./pages/SavedPage'));
 const AddPage = lazy(() => import('./pages/AddPage'));
-
+const PostPage = lazy(() => import('./pages/PostPage'));
+const PublicPostPage = lazy(()=>import('./pages/PublicPostPage'));
 
 const AccountPage = lazy(() => import('./pages/AccountPage'));
 const ExplorePage = lazy(() => import('./pages/ExplorePage'));
+
 const HelpPage = lazy(() => import('./pages/HelpPage'));
 const MessagePage = lazy(() => import('./pages/MessagePage'));
 const NotificationPage = lazy(() => import('./pages/NotificationPage'));
@@ -24,6 +25,7 @@ const SignupPage = lazy(() => import('./pages/SignupPage'));
 const ProfileShowPage = lazy(() => import('./pages/ProfilePages/ProfileShowPage'));
 const ProfileViewPage = lazy(() => import('./pages/ProfilePages/ProfileViewPage'));
 const ConnectionPage = lazy(() => import('./pages/ProfilePages/ConnectionPage'));
+
 
 const EditProfilePage = lazy(() => import('./pages/ProfilePages/EditProfilePage'));
 const SettingsPage = lazy(() => import('./pages/ProfilePages/SettingsPage'));
@@ -54,17 +56,25 @@ function App() {
           <Routes>
             <Route path="/" element={<LoginPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/explore" element={<ExplorePage />} />
-            <Route path="/saved" element={<SavedPage />} />
+            <Route path="/explore/:section/:option/:pageNo" element={<ExplorePage />} />
             <Route path="/add" element={<AddPage />} />
+            <Route path="/add/edit/:postId" element={<AddPage />} />
+            <Route path="/post/:postId" element={<PostPage />} />
+            <Route path="/post/:postId/:commentId" element={<PostPage />} />
+            <Route path="/post/public/:postId" element={<PublicPostPage />} />
+            <Route path="/post/public/:postId/:commentId" element={<PublicPostPage />} />
             <Route path="/message/:username" element={<MessagePage />} />
             <Route path="/notification" element={<NotificationPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/profile" element={<ProfilePage />} >
               <Route path="options" element={<ProfileOptionPage />} />
               <Route path="show" element={<ProfileShowPage />} />
+              <Route path="show/:option" element={<ProfileShowPage />} />
+              <Route path="show/:option/:pageNo" element={<ProfileShowPage />} />
               <Route path="view/:username" element={<ProfileViewPage />} />
-              <Route path="connections" element={<ConnectionPage />} />
+              <Route path="view/:username/:option" element={<ProfileViewPage />} />
+              <Route path="view/:username/:option/:pageNo" element={<ProfileViewPage />} />
+              <Route path="connections/:option/:pageNo" element={<ConnectionPage />} />
               <Route path="user/edit/profile" element={<EditProfilePage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>

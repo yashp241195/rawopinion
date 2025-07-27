@@ -7,7 +7,7 @@ const PrivacyPage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-            <title>Privacy rawopinion.in</title>
+            <title>Privacy opinion.in</title>
           </Helmet>
   }
 

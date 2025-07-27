@@ -7,7 +7,7 @@ const CenterPage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-            <title>Center rawopinion.in</title>
+            <title>Center opinion.in</title>
           </Helmet>
   }
 

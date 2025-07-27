@@ -7,7 +7,7 @@ function LoginPage() {
 
   const modifyHeader = () => {
       return <Helmet>
-              <title>Login rawopinion.in</title>
+              <title>Login opinion.in</title>
           </Helmet>
   }
 

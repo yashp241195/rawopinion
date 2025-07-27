@@ -51,29 +51,34 @@ const Login = () => {
     console.log("error",error)
   }
 
-  if (data) {
-    const newState = {
-      token:data.login, 
-      hasEssential:true,
-      isDeactivated:false,
-      isBanned:false,
+  useEffect(()=>{
+ 
+    if (data) {
+      const newState = {
+        token:data.login, 
+        hasEssential:true,
+        isDeactivated:false,
+        isBanned:false,
+      }
+      saveToLocal("auth",newState)
+      authVar(newState)
+      navigate("/explore")
     }
-    saveToLocal("auth",newState)
-    authVar(newState)
-    navigate("/explore")
-  }
 
-  if (dataG) {
-    const newState = {
-      token:dataG.signInWithGoogle,
-      hasEssential:true,
-      isDeactivated:false,
-      isBanned:false,
+    if (dataG) {
+      const newState = {
+        token:dataG.signInWithGoogle,
+        hasEssential:true,
+        isDeactivated:false,
+        isBanned:false,
+      }
+      saveToLocal("auth",newState)
+      authVar(newState)
+      navigate("/explore")
     }
-    saveToLocal("auth",newState)
-    authVar(newState)
-    navigate("/explore")
-  }
+
+  },[data, dataG])
+
 
   const loginSchema = Joi.object({
     email: validationRules.email,
@@ -326,8 +331,6 @@ const Login = () => {
 
   const saveToLocalDirect = (key, value) => localStorage.setItem(key, value)
   saveToLocalDirect("hasInternet",true)
-  appmodeVar("JOB_SEARCH")
-  saveToLocalDirect("appmode","JOB_SEARCH")
 
   return (
     <div>

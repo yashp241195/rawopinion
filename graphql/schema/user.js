@@ -4,7 +4,7 @@ const { transporter, getEmailBody, } = require('./../utils/email')
 const nodemailer = require("nodemailer")
 
 const {
-  BlockModel,
+  BlockModel, FollowModel
 } = require('../models/content')
 
 const { 
@@ -29,6 +29,8 @@ const UserTypes = `
   }
 
   type ProfileInfoType{
+    firstname:String 
+    lastname:String 
     profilePic:ImageType
     bio:String
     location:String
@@ -37,15 +39,16 @@ const UserTypes = `
   type PublicProfileType{
     username:String
     publicUsername:String
+    isMe:String isFollowByMe:String 
+    isBlockedByMe:String
     followersCount:String
-    firstname:String lastname:String 
+    firstname:String 
+    lastname:String 
+    location:String
     profilePic:ImageType
-    profileinfo:ProfileInfoType 
+    bio:String
   }
 
-  type PublicPageType{
-    username:String
-  }
 
   input ImageInput{
     imgid:Int url:String icon_url:String 
@@ -56,7 +59,9 @@ const UserTypes = `
   }
 
   
-  input EditProfileInfoInput{  
+  input EditProfileInfoInput{
+    firstname:String
+    lastname:String  
     bio:String
     location:String
   }
@@ -64,7 +69,6 @@ const UserTypes = `
   input SignUpInput{ 
     email:String, password:String, dateofbirth:String 
   }
-
 
 
   type Query{
@@ -89,6 +93,7 @@ const UserTypes = `
     changePassword(password:String,newPassword:String):String
     editProfileInfo(profileInfoInput:EditProfileInfoInput):String
     uploadImage(image:ImageInput):String
+
   }
 
 `
@@ -261,7 +266,19 @@ const UserResolver = {
       try{
         const { _id } = auth.verifyToken("ACCESS_TOKEN", null, req)
         const user = await UserModel.findOne({ _id }, { profileInfo:1, })
-        return user.profileInfo
+        const { 
+          firstname, lastname, imageGallery,
+          bio, location
+        } = user.profileInfo
+        
+        const profilePic = imageGallery.find((it)=>it.imgid == 1)
+
+        return {
+          firstname, lastname, 
+          bio, location,
+          profilePic
+        }
+
       }
       catch(e){
         return GQLError(e.message,"profile info not found")
@@ -272,19 +289,23 @@ const UserResolver = {
       try{
 
         const { _id } = auth.verifyToken("ACCESS_TOKEN", null, req)
+        
         const usernameInput = args.username
         const view = args.view
         
         let user = null
-
+        let isMe = "NO"
+        let isFollowByMe = "NO"
+        let isBlockedByMe = "NO"
+        
         if(usernameInput !== null){
 
-          const users = await UserModel.find({ $or: [{ _id }, { username:usernameInput }] });
+          const users = await UserModel.find({ $or: [{ _id }, { publicUsername:usernameInput }] });
 
           if (users.length < 1) throw new Error("INVALID_REQUEST_Q");
           
           const sender = users.find((user) => user._id.toString() === _id);
-          const receiver = users.find((user) => user.username === usernameInput);
+          const receiver = users.find((user) => user.publicUsername === usernameInput);
 
           if (!sender || !receiver ){
             throw new Error("INVALID_REQUEST_P");
@@ -292,12 +313,8 @@ const UserResolver = {
 
           if(sender.username !== receiver.username){
             
-            const isBlocked = await BlockModel.find({
+            const amIBlocked = await BlockModel.find({
               $or:[
-                {
-                  sender: sender.username,
-                  receiver: receiver.username,
-                },
                 {
                   sender: receiver.username,
                   receiver: sender.username,
@@ -305,9 +322,36 @@ const UserResolver = {
               ]
             });
   
-            if (isBlocked.length !== 0) throw Error("YOURE_BLOCKED");
+            if (amIBlocked.length !== 0) throw Error("YOURE_BLOCKED");
+
+            const didIBlock = await BlockModel.find({
+              $or:[
+                {
+                  sender: sender.username,
+                  receiver: receiver.username,
+                }
+              ]
+            });
+  
+            if (didIBlock.length !== 0) {
+              isBlockedByMe = "YES"
+            }
 
 
+            const isFollowed = await FollowModel.find(
+              {
+                sender: sender.username,
+                receiver: receiver.username,
+              }
+            );
+  
+            if (isFollowed.length > 0) {
+              isFollowByMe = "YES"
+            }
+
+          }
+          else{
+            isMe = "YES"
           }
 
           user = receiver
@@ -316,7 +360,8 @@ const UserResolver = {
         else{
 
           user = await UserModel.findOne({ _id })
-        
+          isMe = "YES"
+
         }
 
         const { 
@@ -326,19 +371,22 @@ const UserResolver = {
           isBanned, isDeactivated,
         } = user
 
-        // console.log("user",user)
-        // console.log("followersCount",followersCount)
-        // console.log("publicUsername",publicUsername)
-
 
         const hasAccess = isEmailVerified && hasEssential 
             && isBanned == false && isDeactivated == false
 
-        if(!hasAccess){throw Error("ACCESS_DENIED")}
+        if(!hasAccess){
+          if(hasEssential){
+            throw Error("ACCESS_DENIED")
+          }else{
+            throw Error("ESSENTIALS_NOT_FOUND")
+          }
+        }
 
         const {
           firstname, 
           lastname,
+          location,
           bio,
           imageGallery
         } = profileInfo
@@ -349,12 +397,11 @@ const UserResolver = {
           const profilePic = imageGallery.filter(it=>it.imgid == 1)[0].icon_url
 
           return {
-
             firstname: firstname,
             lastname: lastname,
             username: username,
-            publicUsername:publicUsername, 
-            profilePic: profilePic
+            publicUsername: publicUsername, 
+            profilePic: profilePic, 
 
           }
 
@@ -364,22 +411,22 @@ const UserResolver = {
           
           const profilePic2 = imageGallery.filter(it=>it.imgid == 1)[0]
 
-          const PublicProfile = {
+          return {
             username, firstname, lastname, 
             publicUsername, followersCount:followersCount,
-            profileinfo:{
-              bio
-            },
+            bio:bio, isMe, isFollowByMe, isBlockedByMe,
             profilePic: profilePic2,
+            location:location
           }
-
-          return PublicProfile
         
         }
       
       }
       catch(e){
         console.log("eeerrr",e.message)
+        if(e.message === "ESSENTIALS_NOT_FOUND"){
+          return GQLError(e.message,"essentials not found")
+        }
         return GQLError(e.message,"public profile not found")
       
       }
@@ -391,11 +438,13 @@ const UserResolver = {
   Mutation: {
 
     signup: async (_, args, { auth }) => {
+
       try {
 
         const { email, password, dateofbirth} = args.inputSignUp
         const dob = new Date(dateofbirth.replace(/^"|"$/g, ""))
         const age = calculateAgeFromDate(dateofbirth)
+        
         isValidInput(validateSchema.isSignUpValid, { email, age, password })
 
         const newUser = new UserModel({ 
@@ -408,8 +457,8 @@ const UserResolver = {
         await newUser.setPassword(password)
         await newUser.save()
 
+        /*
         const { _id } = newUser
-
         const emailToken = await auth.signToken("EMAIL_TOKEN", { _id },)
         const emailBody = await getEmailBody(
           "VERIFICATION_EMAIL", { email, emailToken, })
@@ -418,10 +467,14 @@ const UserResolver = {
         const info = await sender.sendMail(emailBody)
         
         if(!info){ throw Error("EMAIL_NOT_SENT") }
+        */
+
         return "Email verification link sent to " + email +" "
         
       } 
       catch (e) {
+
+        console.log("e.message",e.message)
 
         if(e.code == 11000){
           return GQLError("EMAIL_EXISTS","Email already exists")
@@ -525,15 +578,24 @@ const UserResolver = {
       try{
         const profileInfo = args.profileInfoInput
         const { _id } = auth.verifyToken("ACCESS_TOKEN", null, req)
+
         isValidInput(validateSchema.isEditProfileInfoValid, profileInfo)
 
-        const updatedUser = await UserModel.updateOne({ _id, }, { 
-          $set: { 
-            "profileInfo.bio":profileInfo.bio,
-            "profileInfo.jobrole":profileInfo.jobrole,
-            "profileInfo.company":profileInfo.company,
-           } 
-        })
+        const updatedUser = await UserModel.findOneAndUpdate(
+          { _id },
+          { 
+            $set: { 
+              "profileInfo.firstname": profileInfo.firstname,
+              "profileInfo.lastname": profileInfo.lastname,
+              "profileInfo.bio": profileInfo.bio,
+              "profileInfo.location": profileInfo.location,
+              "hasEssential": true
+            }
+          },
+          { new: true } 
+        );
+
+        console.log("updatedUser",updatedUser)
 
         if (updatedUser.modifiedCount != 1) { 
           return GQLError("USER_UPDATE_FAILED","user update failed") 

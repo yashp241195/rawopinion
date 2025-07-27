@@ -78,6 +78,12 @@ const auth = {
                     const et = token.replace(/\$/g, '.');
                     verifiedToken = jwt.verify(et, AUTH_HASH.JWT_EMAIL_TOKEN);
                     break;
+                case "GET_READER":
+                    if(req.headers['authorization']){
+                        verifiedToken = jwt.verify(req.headers['authorization'], AUTH_HASH.JWT_ACCESS_TOKEN);
+                        return verifiedToken
+                    }
+                    return { _id:null }
                 default:
                     break;
             }
@@ -89,6 +95,7 @@ const auth = {
             throw Error("VERIFY_"+type+"_FAILED");
         }
     },
+    
 }
 
 module.exports = {auth}

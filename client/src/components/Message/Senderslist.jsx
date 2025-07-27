@@ -576,40 +576,9 @@ const Senderslist = (props) => {
                     Message
                 </div>
                 <div style={{ flexGrow: 1 }} ></div>
-                <div style={{}}>
-                    <FormControl variant="standard" sx={{ m: 1, minWidth: 100 }}>
-                        <Select
-                            labelId="demo-simple-select-standard-label"
-                            id="demo-simple-select-standard"
-                            value={selectedInbox}
-                            onChange={(e) => { setSelectedInbox(e.target.value) }}
-                        >
-                            <MenuItem value={"INBOX"}>Inbox</MenuItem>
-                            <MenuItem value={"ARCHIVE"}>Archived</MenuItem>
-                        </Select>
-                    </FormControl>
-                </div>
+                
             </div>
-            <div style={{ display: "flex", paddingLeft: 10, paddingRight: 10, paddingTop: 5 }} >
-                {selectedMenu !== "SELECT" ?
-                    <TextField
-                        InputProps={{
-                            endAdornment:
-                                <IconButton>
-                                    <CloseIcon />
-                                </IconButton>
-                        }}
-                        variant='standard'
-                        style={{ width: "100%" }}
-                        size="small"
-                        placeholder="Search"
-                    />
-                    :
-                    <div style={{ display: "flex", width: "100%" }}>
-                        Hello
-                    </div>
-                }
-            </div>
+
             <div style={{ paddingTop: 20 }}></div>
             <div style={{ height: 350, overflowY: "auto", overflowX: "hidden" }}>
                 {messageNodeList && messageNodeList.length > 0 ?

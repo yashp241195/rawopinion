@@ -17,7 +17,7 @@ const NavbarStatic = () => {
           <img src={imgurl} alt={text} height="33" />
         </div>
         <div style={{ paddingTop: 10, paddingLeft:10, fontSize: 26, fontFamily: "serif", }}>
-            RawOpinion
+            Opinion
         </div>
       </div>
     </Link>
@@ -47,7 +47,7 @@ const NavbarStatic = () => {
           </div>
         </div>
         <div style={{ fontSize: 26, fontFamily:"serif", paddingTop: 10, paddingLeft:5   }}>
-            RawOpinion
+            Opinion
           </div>
       </div>
     </div>

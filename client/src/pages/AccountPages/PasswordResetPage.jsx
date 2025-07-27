@@ -7,7 +7,7 @@ const PasswordResetPage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-            <title>PasswordReset rawopinion.in</title>
+            <title>PasswordReset opinion.in</title>
           </Helmet>
   }
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import useWindowSize from '../../hooks/useWindowSize'
+import useWindowSize from '../../../hooks/useWindowSize'
 import List from 'react-virtualized/dist/commonjs/List';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
 import Avatar from '@mui/material/Avatar';
@@ -22,39 +22,50 @@ import Tabs from '@mui/material/Tabs';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import CurrencyBitcoinIcon from '@mui/icons-material/CurrencyBitcoin';
 import CloseIcon from '@mui/icons-material/Close';
+import Vote from './Post/Vote';
+
 import RssFeedIcon from '@mui/icons-material/RssFeed';
 
 import TablePagination from '@mui/material/TablePagination';
 import { Modal, Menu, MenuItem, } from '@mui/material';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
-import { BsMessenger } from 'react-icons/bs'
+
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import ThumbUpOffAltIcon from '@mui/icons-material/ThumbUpOffAlt';
+import ThumbDownOffAltIcon from '@mui/icons-material/ThumbDownOffAlt';
 
 
 
-const Connections = () => {
+const Comments = () => {
 
   const [width,] = useWindowSize()
 
 
-  const { option, section, pageNo } = useParams();
+  const { option, section, pageNo, username } = useParams();
 
   const navigate = useNavigate()
+
   const location = useLocation()
 
   console.log("searchTerm 1",location.state)
-
-  const [followOption, setFollowOption] = useState(option)
 
 
   const GET_SEARCH_RESULT_QUERY = gql`
     query GetProfileResults($searchInput:SearchInput){
       getProfileResults(searchInput:$searchInput){
-          people{
-            firstname lastname 
-            publicUsername 
+          comments{
+            _id
+            postId
+            parentCommentId
             profilePicIcon
-          }  
+            publicUsername
+            text
+            upvoteCount downvoteCount replyCount
+            timestamp
+            readerUpvoted
+          }
           currentPage
           totalPages
           totalCount
@@ -65,17 +76,16 @@ const Connections = () => {
 
   const [loadSearchResults, { data, loading, error }] = useLazyQuery(GET_SEARCH_RESULT_QUERY, { fetchPolicy: "network-only" })
 
-  const [selectedAIAnalysis, setSelectedAIAnalysis] = useState("")
 
   const [searchFilter, setSearchFilter] = useState({
     section: section, searchTerm: "", searchType: option,
-    currentPage: parseInt(pageNo), totalCount: 0
+    currentPage: 1, totalCount: 0
   })
 
 
   useEffect(()=>{
     if(location && location.state && location.state.searchTerm){
-      setSearchFilter({...searchFilter, searchTerm:location.state.searchTerm})
+      setSearchFilter({...searchFilter,searchTerm:location.state.searchTerm})
     }
   },[location.state])
   
@@ -84,7 +94,7 @@ const Connections = () => {
     loadSearchResults({
       variables: {
         searchInput: {
-          type: searchFilter.searchType,
+          type: "comments",
           currentPage: searchFilter.currentPage
         }
       },
@@ -98,37 +108,6 @@ const Connections = () => {
     searchFilter.section,
     loadSearchResults
   ])
-
-
-  const wrapMenuItem = (item) => {
-    const { minWidth, label, value, menuItemList } = item
-    return <FormControl sx={{ m: 1, minWidth: minWidth, }} size="small">
-      <Select defaultValue={''}
-        onChange={(e) => {
-          setFollowOption(e.target.value)
-        }}
-        value={followOption}
-        MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
-        variant='standard'
-        size="small" 
-        >
-        {
-          menuItemList.map((it, i) => {
-            return <MenuItem 
-                key={i} value={it}
-                onClick={()=>{
-                  console.log("it",it)
-                  setSearchFilter({...searchFilter, searchType: it})
-                  navigate("/profile/connections/"+it+"/"+pageNo)
-                }}
-                >{it}</MenuItem>
-          })
-        }
-      </Select>
-    </FormControl>
-  }
-
-
 
 
   useEffect(() => {
@@ -146,14 +125,24 @@ const Connections = () => {
 
   }, [data,])
 
+  useEffect(() => {
+      if(username){
+        navigate(`/profile/view/${username}/comments/${searchFilter.currentPage}`,{ state: location.state });
+      }else{
+        navigate(`/profile/show/comments/${searchFilter.currentPage}`,{ state: location.state });
+      }
+    }, [searchFilter.currentPage, navigate]);
+    
+
+
+
 
   if (error) { console.log("error", error) }
 
-  useEffect(() => {
-    navigate(`/profile/connections/${followOption}/${searchFilter.currentPage}`,{ state: location.state });
-  }, [ searchFilter.currentPage, followOption, navigate]);
 
   
+
+
   const getDesktopView = () => {
     return <div>
       <div style={{ display: "flex", justifyContent: "center", height: "50vh", paddingTop: 0, width: "98%", border: "1px solid #fff" }}>
@@ -168,13 +157,7 @@ const Connections = () => {
                         fontSize: 18, color: "#595959"
                       }}
                       >
-                       {
-                          wrapMenuItem({
-                            value: 'followers',
-                            minWidth: 160, label: "followers",
-                            menuItemList: ["followers", "following","blocked"]
-                          })
-                        }
+                        My Comments
                       </div>
                       <div style={{ flexGrow: 1 }}></div>
                       <div>
@@ -201,53 +184,81 @@ const Connections = () => {
                 <div style={{ paddingLeft:0, display: "flex", justifyContent: "center", width: "100%", height: "45vh", border: "1px solid #fff", overflowY: "auto", borderRadius: 5 }} >
                   <div style={{ border: "1px solid #fff", width: "95%", paddingLeft: 5 }} >
 
-
                   {
-                    data && data.getProfileResults && data.getProfileResults.people
-                    && data.getProfileResults.people.map((person, i) => {
-                      return <div style={{ border: "1px solid #efefef", borderRadius: 5, height: 70, width: "90%", marginBottom: 5 }}>
+                    data && data.getProfileResults && data.getProfileResults.comments 
+                    && data.getProfileResults.comments.map((comment, num) => {
+
+                      return <div style={{ border: "1px solid #efefef", borderRadius: 5, width: "90%", marginBottom: 10 }}>
                         <div>
-                          <div style={{ display: "flex", padding: 10, border: "1px solid #fff" }}>
-                            <div>
-                              <Avatar sx={{ height: 50, width: 50 }} src={person.profilePicIcon} />
-                            </div>
-                            <div style={{ display: "flex", flexDirection: "column", paddingLeft: 10, paddingRight: 10 }} >
-                              <div style={{ fontSize: "1rem", paddingTop: 5, }} >
-                                {person.firstname + " " + person.lastname}
+                          <Link
+                            style={{ textDecoration: "none", color: "black" }} to={"/post/" + comment.postId + "/"+comment._id}>
+                            <div style={{ display: "flex", padding: 10, border: "1px solid #fff" }}>
+                              <div style={{ display: "flex", flexDirection: "row", paddingLeft: 10, paddingRight: 10 }} >
+                              <div  style={{paddingTop:10}}>
+                                <Avatar sx={{ height: 30, width: 30 }} src={comment.profilePicIcon} />
                               </div>
-                              <div style={{ fontSize: "0.8rem" }}>
-                                <Link
-                                style={{ textDecoration: "none", color: "blue" }} to={"/profile/view/" + person.publicUsername+"/overview"}>
-                                  @{person.publicUsername}
-                                </Link>
+                              <div style={{ fontSize: "0.9rem", display:"flex", flexDirection:"column", paddingLeft: 5, paddingTop: 5, fontFamily:"sans-serif" }} >
+                                  <div style={{display:"flex"}}>
+                                    <div style={{ fontSize: "0.9rem", paddingLeft: 5, paddingTop: 0, fontWeight:"bold" }}>
+                                      {comment.publicUsername} 
+                                    </div>
+                                    <div style={{ flexGrow: 1 }}></div>
+                                    <div style={{ fontSize: "0.8rem", paddingLeft: 5, paddingTop: 5 }}>
+                                    {comment.timestamp}
+                                    </div>
+                                  </div>
+                                  <div style={{ whiteSpace: 'pre-line',  padding: 5, fontSize: 14, width: 300 }}>
+                                    {comment.text}
+                                  </div>
+                                  <div style={{ border:"1px solid #fff"}}>
+                                    <Button
+                                      disabled
+                                      size="small" variant='text'
+                                      style={{textTransform:"none", color:"#595959"}}
+                                      startIcon={
+                                        (comment.readerUpvoted != null)?
+                                        comment.readerUpvoted == true?<ThumbUpIcon />:<ThumbUpOffAltIcon />
+                                        :<ThumbUpOffAltIcon />
+                                      }
+                                    >
+                                       ({comment.upvoteCount})
+                                    </Button>
+                                    <Button
+                                      disabled
+                                      size="small" variant='text'
+                                      style={{textTransform:"none", color:"#595959"}}
+                                      startIcon={
+                                        (comment.readerUpvoted != null)?
+                                        comment.readerUpvoted == false?<ThumbDownIcon />:<ThumbDownOffAltIcon />
+                                        :<ThumbDownOffAltIcon />
+                                      }
+                                    >
+                                       ({comment.downvoteCount})
+                                    </Button>
+                                  </div>
                               </div>
-                              <div style={{ fontSize: "0.8rem" }}>
-                                {person.timestamp}
+                              <div style={{ fontSize: "0.8rem", paddingLeft: 5, paddingTop: 5 }}>
+                                 
                               </div>
                             </div>
                             <div style={{ flexGrow: 1 }}></div>
                             <div style={{ padding: 5 }}>
-                              <Button
-                                onClick={
-                                  () => {
-                                    navigate("/message/"+person.publicUsername)
-                                  }
-                                }
-                                size="small" variant="outlined"
-                                sx={{
-                                  textTransform: "none",
-                                  border: "1px solid #efefef"
-                                }}
-                                startIcon={<BsMessenger />}
-                              >
-                                Message
-                              </Button>
                             </div>
                           </div>
+                          </Link>
                         </div>
+                        <div style={{ display: "flex", }}>
+                          
+                        </div>
+                        <div>
+
+                        </div>
+
                       </div>
                     })
                   }
+
+                  
                       
                   {
                     loading?
@@ -311,4 +322,4 @@ const Connections = () => {
   )
 }
 
-export default Connections
+export default Comments

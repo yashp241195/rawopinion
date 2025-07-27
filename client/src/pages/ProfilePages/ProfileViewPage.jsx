@@ -10,7 +10,7 @@ const ProfileViewPage = () => {
 
   const modifyHeader = () => {
     return <Helmet>
-      <title>{username} rawopinion.in</title>
+      <title>{username} opinion.in</title>
     </Helmet>
   }
 
@@ -18,7 +18,7 @@ const ProfileViewPage = () => {
       <AuthLayoutFullScreen>
         {modifyHeader()}
         <div style={{ height:"80vh", display:"flex", justifyContent:"center", overflowY:"auto" }}>
-            <ProfileView username={username} />
+            <ProfileView viewType={"view"} username={username} />
         </div>
       </AuthLayoutFullScreen> 
   )
